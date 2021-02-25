@@ -1,0 +1,146 @@
+\documentclass[a4paper]{scrreprt}
+
+% Uncomment to optimize for double-sided printing.
+% \KOMAoptions{twoside}
+
+% Set binding correction manually, if known.
+% \KOMAoptions{BCOR=2cm}
+
+% Localization options
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+% Quotations
+\usepackage{dirtytalk}
+
+% Enhanced verbatim sections. We're mainly interested in
+% \verbatiminput though.
+\usepackage{verbatim}
+
+% Automatically remove leading whitespace in lstlisting
+\usepackage{lstautogobble}
+
+% PDF-compatible landscape mode.
+% Makes PDF viewers show the page rotated by 90°.
+\usepackage{pdflscape}
+
+% Advanced tables
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+
+% Fancy tablerules
+\usepackage{booktabs}
+
+% Graphics
+\usepackage{graphicx}
+
+% Current time
+\usepackage[useregional=numeric]{datetime2}
+
+% Float barriers.
+% Automatically add a FloatBarrier to each \section
+\usepackage[section]{placeins}
+
+% Custom header and footer
+\usepackage{fancyhdr}
+
+\usepackage{geometry}
+\usepackage{layout}
+
+% Math tools
+\usepackage{mathtools}
+% Math symbols
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{amsthm}
+% General symbols
+\usepackage{stmaryrd}
+
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+
+% Indistinguishable operator (three stacked tildes)
+\newcommand*{\diffeo}{% 
+  \mathrel{\vcenter{\offinterlineskip
+  \hbox{$\sim$}\vskip-.35ex\hbox{$\sim$}\vskip-.35ex\hbox{$\sim$}}}}
+
+% Bullet point
+\newcommand{\tabitem}{~~\llap{\textbullet}~~}
+
+\pagestyle{plain}
+% \fancyhf{}
+% \lhead{}
+% \lfoot{}
+% \rfoot{}
+% 
+% Source code & highlighting
+\usepackage{listings}
+
+% SI units
+\usepackage[binary-units=true]{siunitx}
+\DeclareSIUnit\cycles{cycles}
+
+% Convenience commands
+\newcommand{\mailsubject}{41106 - Cryptography Protocols - Series 1}
+\newcommand{\maillink}[1]{\href{mailto:#1?subject=\mailsubject}
+                               {#1}}
+
+% Should use this command wherever the print date is mentioned.
+\newcommand{\printdate}{\today}
+
+\subject{41106 - Cryptographic Protocols}
+\title{Series 1}
+
+\author{Michael Senn \maillink{michael.senn@students.unibe.ch} - 16-126-880}
+
+\date{\printdate}
+
+% Needs to be the last command in the preamble, for one reason or
+% another. 
+\usepackage{hyperref}
+
+
+\begin{document}
+\maketitle
+
+
+\setcounter{chapter}{0}
+
+\chapter{Series 1}
+
+\section{Calculation in finite fields}
+
+\subsection{$r(X) = 3X^3 + 2X^2 + X \in GF(5)[X]$}
+
+Given $GF(5)$ has prime order, we associate it with the ring of integers modulo
+$5$, with the usual definitions for addition and multiplication.
+
+As such evaluation of $r(X)$ at $X = 2$ is as follows:
+\begin{align*}
+		3X^3 + 2X^2 + X & \equiv 3 \cdot 2^3 + 2 \cdot 2^2 + 2 \\
+						& \equiv 3 \cdot 3 + 2 \cdot 4 + 2 \\
+						& \equiv 4 + 3 + 2 \\
+						& \equiv 4 \pmod 5
+\end{align*}
+
+\subsection{$s(X) = (1 + \alpha) \cdot X^3 + \alpha \cdot X^2 + X \in GF(4)[X]$}
+
+Given the provided addition and multiplication tables of $GF(4)$, evaluation of
+$s(X)$ at $X = \alpha$ is as follows:
+
+\begin{align*}
+		(1 + \alpha) \cdot X^3 + \alpha \cdot X^2 + X & = (1 + \alpha) \cdot \alpha^3 + \alpha \cdot \alpha^2 + \alpha \\
+													  & = (1 + \alpha) \cdot \alpha \cdot (1 + \alpha) + \alpha \cdot (1 + \alpha) + \alpha) \\
+													  & = (1 + \alpha) \cdot 1 + 1 + \alpha \\
+													  & = (1 + \alpha) + 1 + \alpha \\
+													  & = \alpha + \alpha \\
+													  & = 0
+\end{align*}
+
+
+\section{Trivial functions for secure computations}
+
+\section{Non-trivial functions and embedded OR}
+
+
+\end{document}
