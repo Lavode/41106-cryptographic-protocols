@@ -240,30 +240,27 @@ can be simplified:
 
 \subsection{Textbook ElGamal}
 
-Let $\oplus$, $\otimes$ be the multiplication operation in $\mathbb{G}$. Let
-$m_1, m_2$ be two plaintexts. Let $y$ be the El Gamal public key. Then:
+Let $\otimes$ be the component-wise, $\oplus$ the regular multiplication
+operation in $\mathbb{G}$. Let $m_1, m_2$ be two plaintexts. Let $y$ be the El
+Gamal public key. Then:
 
 \begin{align*}
-		Enc(y, m_1) & = (g^{r_1}, m_1 \cdot y^{r_1}) \\
-		Enc(y, m_2) & = (g^{r_2}, m_2 \cdot y^{r_1})
-\end{align*}
-
-And:
-\begin{align*}
-		Enc(y, m_1) \otimes Enc(y, m_2) & = (g^{r_1} \otimes g^{r_2}, m_1 \cdot y^{r_1} \otimes m_2 \cdot y^{r_2}) \\
+		Enc(y, m_1) \otimes Enc(y, m_2) & = (g^{r_1}, m_1 \cdot y^{r_1}) \otimes (g^{r_2}, m_2 \cdot y^{r_2}) \\ 
+										& = (g^{r_1} \cdot g^{r_2}, (m_1 \cdot y^{r_1}) \cdot (m_2 \cdot y^{r_2})) \\
 										& = (g^{r_1 + r_2}, (m_1 \cdot m_2) y^{r_1 + r_2}) \\
 										& = Enc(y, m_1 \oplus m_2)\ \text{for}\ r := r_1 + r_2
 \end{align*}
 
 \subsection{Textbook RSA}
 
-Let $\oplus$, $\otimes$ be the multiplication operation in $\mathbb{Z}_N^{*}$.
-Let $m_1, m_2$ be two plaintexts. Let $(N, e)$ be the RSA public key. Then:
+Let $\otimes$ be the multiplication of the second components, $\oplus$ the
+regular multiplication operation in $\mathbb{Z}_N^{*}$.  Let $m_1, m_2$ be two
+plaintexts. Let $(N, e)$ be the RSA public key. Then:
 
 \begin{align*}
 		Enc((N, e), m_1) \otimes Enc((N, e), m_2) & = (m_1^e \mod N) \otimes (m_2^e \mod N) \\
 												  & = (m_1 \cdot m_2)^e \mod N \\
-												  & = Enc((N, e) m_1 \oplus m_2)
+												  & = Enc((N, e), m_1 \oplus m_2)
 \end{align*}
 
 \end{document}
