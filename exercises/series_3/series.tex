@@ -199,7 +199,7 @@ VPN client unblinds and stores the signature.
 	  \> \textbf{Send} \var{(T, h')} to \textbf{Authentication Service}\\
 	  \\
 	  \textbf{Authentication Service} \\
-	  \> \textbf{If} OAuth.check\_authorization(\var{T}) \\
+	  \> \textbf{If} OAuth.verify(\var{T}) \\
 	  \> \> \var{s'} := $h'^d \mod N$ \\
 	  \> \> \textbf{Send} \var{s'} to \textbf{VPN Client} \\
 	  \> \textbf{Else} \\
@@ -217,7 +217,7 @@ VPN client unblinds and stores the signature.
 
 \subsection{VPN tunnel authentication}
 
-The client finds a nearby VPN tunnel server $srv$ by means of $srv$. It then
+The client finds a nearby VPN tunnel server $srv$ by means of DNS. It then
 sends the signature $s$, random token $m$ and server $srv$ to the key
 management service. The KMS verifies whether $s$ is a valid signature for $m$.
 
@@ -238,9 +238,9 @@ involve deriving a shared symmetric key.
 	  \> \textbf{Send} \var{(srv, s, m)} to \textbf{Key Management Service}\\
 	  \\
 	  \textbf{Key Management Service} \\
-	  \> \textbf{If} $s^e = H(m)$ \\
+	  \> \textbf{If} $s^e \equiv H(m) \pmod{N}$ \\
 	  \> \var{DTK} := VPN.get\_key(\var{srv}) \\
-	  \> \> \textbf{Send} \var{DTk} to \textbf{VPN Client} \\
+	  \> \> \textbf{Send} \var{DTK} to \textbf{VPN Client} \\
 	  \> \textbf{Else} \\
 	  \> \> Error\\
 	  \\
@@ -289,7 +289,7 @@ As such this keypair has a global scope and limited lifetime.
 \subsubsection{DTK}
 
 The keypair to establish a secure tunnel connection can be specific to one
-client and session. As the key management service - which generates these - has
+VPN session. As the key management service - which generates these - has
 no information about a client's identity, there is no danger in doing so.
 
 As such these keypairs have a local scope and limited lifetime.
