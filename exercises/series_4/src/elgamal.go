@@ -7,6 +7,9 @@ import (
 	"math/big"
 )
 
+// 10^6
+const maxAdditiveElGamal int64 = 1000000
+
 // ElGamal public key
 type PublicKey struct {
 	// Prime modulus of (Z / pZ)*
@@ -35,9 +38,42 @@ func (priv PrivateKey) String() string {
 	return fmt.Sprintf("(\n\tx = %d\n)", priv.x)
 }
 
+func AdditiveEncrypt(msg *big.Int, pub PublicKey) (*big.Int, *big.Int, error) {
+	h := big.NewInt(0)
+	h.Set(pub.g)
+	h.Exp(h, msg, pub.p)
+
+	return Encrypt(h, pub)
+}
+
+func AdditiveDecrypt(R *big.Int, c *big.Int, pub PublicKey, priv PrivateKey) (*big.Int, error) {
+	h, err := Decrypt(R, c, pub, priv)
+	if err != nil {
+		return big.NewInt(0), err
+	}
+
+	// Size limitation on maxAdditiveElGamal will ensure it'll comfortably fit in an int64
+	for i := int64(0); i <= maxAdditiveElGamal; i += 1 {
+		exponent := big.NewInt(i)
+		power := big.NewInt(0)
+		power.Exp(pub.g, exponent, pub.p)
+
+		if power.Cmp(h) == 0 {
+			return exponent, nil
+		}
+	}
+
+	return big.NewInt(0), fmt.Errorf("Did not find exponent, input must have been invalid")
+}
+
 func Encrypt(msg *big.Int, pub PublicKey) (*big.Int, *big.Int, error) {
 	R := big.NewInt(0)
 	c := big.NewInt(0)
+
+	// TODO: Ensuer m < q, then map to G
+	// if msg.Cmp(pub.q) != -1 {
+	// 	return R, c, fmt.Errorf("Cannot encrypt m = %v > q = %v", msg, pub.q)
+	// }
 
 	r, err := RandomInt(big.NewInt(0), pub.q)
 	if err != nil {
@@ -188,8 +224,8 @@ func RandomBits(bitLength int) ([]byte, error) {
 }
 
 func main() {
-	// pub, priv, err := Parameters(160, 1024)
-	pub, priv, err := Parameters(10, 16)
+	pub, priv, err := Parameters(160, 1024)
+	// pub, priv, err := Parameters(10, 16)
 	if err != nil {
 		panic(err)
 	}
@@ -197,13 +233,45 @@ func main() {
 	fmt.Printf("Pub = %v\n", pub)
 	fmt.Printf("Priv = %v\n", priv)
 
-	test(10_000, pub, priv)
+	// test(1_000, pub, priv)
+	testAdditive(5, pub, priv)
 
+}
+
+func testAdditive(count int, pub PublicKey, priv PrivateKey) {
+	for i := 0; i < count; i += 1 {
+		a, _ := RandomInt(big.NewInt(0), big.NewInt(maxAdditiveElGamal/2))
+		b, _ := RandomInt(big.NewInt(0), big.NewInt(maxAdditiveElGamal/2))
+
+		ra, ca, err := AdditiveEncrypt(a, pub)
+		if err != nil {
+			fmt.Printf("Error encrypting a: %v\n", err)
+		}
+
+		rb, cb, err := AdditiveEncrypt(b, pub)
+		if err != nil {
+			fmt.Printf("Error encrypting b: %v\n", err)
+		}
+
+		rc := big.NewInt(0)
+		rc.Mul(ra, rb).Mod(rc, pub.p)
+
+		cc := big.NewInt(0)
+		cc.Mul(ca, cb).Mod(cc, pub.p)
+
+		c, err := AdditiveDecrypt(rc, cc, pub, priv)
+		if err != nil {
+			fmt.Printf("Error decrypting c: %v\n", err)
+		} else {
+			fmt.Printf("%v + %v = %v\n", a, b, c)
+		}
+
+	}
 }
 
 func test(count int, pub PublicKey, priv PrivateKey) {
 	for i := 0; i < count; i += 1 {
-		m, err := RandomInt(big.NewInt(0), pub.q)
+		m, err := RandomInt(big.NewInt(1), pub.q)
 		if err != nil {
 			fmt.Printf("ERROR: Unable to generate random number: %v\n", err)
 		}
