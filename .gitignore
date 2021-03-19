@@ -2,3 +2,4 @@ slides/*
 exercises/**/*.log
 exercises/**/*.pdf
 exercises/series_4/src/elgamal
+.Rproj.user

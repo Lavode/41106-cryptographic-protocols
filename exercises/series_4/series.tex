@@ -63,6 +63,7 @@
 \usepackage{stmaryrd}
 
 \DeclarePairedDelimiter\abs{\lvert}{\rvert}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
 
 % Indistinguishable operator (three stacked tildes)
 \newcommand*{\diffeo}{% 
@@ -120,5 +121,98 @@
 
 \chapter{Series 4}
 
+\section{Textbook ElGamal in Go}
+
+Textbook ElGamal was implemented in Go, found in the attached source code.
+Completness was experimentally tested by generating random numbers $x \in
+\mathbb{Z}^*_p$, and verifying that $Dec(sk, Enc(pk, x)) = x\ \forall x$.
+
+\section{Additively homomorphic ElGamal encryption}
+
+Additively homomorphic ElGamal encryption as described in the lecture was
+implemented too, again found in the attached source code. Completness was once
+more experimentally tested. Random pairs of numbers $x, y < 10^4$ were
+generated.  It was then verified that $\operatorname{AM-Dec}(sk,
+\operatorname{AM-Enc}(pk, x) \otimes \operatorname{AM-Enc}(pk, y)) = x + y$,
+where $\otimes$ is the component-wise multiplication  in $\mathbb{Z}_p^*$.
+
+\subsection{Performance of AM-Dec}
+
+Performance of the decryption operation was tested for two different keypairs,
+with inputs in $[1, max]$ where $10^2 \leq max \leq 10^6$. Tests were done as
+follows:
+
+\begin{itemize}
+		\item Two numbers $x, y$ in $[1, max / 2]$ were generated
+		\item $(R_x, C_x) := \operatorname{AM-Enc}(pk, x)$, $(R_y, C_y) := \operatorname{AM-Enc}(pk, y)$
+		\item $(R_z, C_z) := (R_x \cdot R_y, C_x \cdot C_y)$
+		\item The duration it took for the decryption operation $z := \operatorname{AM-Dec}(sk, (R_z, C_z))$ to complete was measured
+		\item The order of magnitude of $z$ as $\floor{\log_{10}{z}}$ and the measured duration were logged
+\end{itemize}
+
+The resulting data was aggregated by keypair and order of magnitude, and the
+mean and standard deviation of the duration calculated. Data is shown in table
+\ref{tbl:performance}.
+
+As decryption of big inputs takes exceedingly long, sample sizes for larger
+inputs were chosen to be smaller.
+
+The large standard deviations can be explained by one magnitude spanning a large
+range - $9999$ and $1000$ both have magnitude $3$, yet decryption of the former
+will require nearly 10 times as many computations as the later.
+
+\begin{table}
+		\begin{tabular}{llllll}
+				\toprule
+				$\abs{p}$ & $\abs{q}$ & Order of magnitude of $z$ & Avg duration & Std dev & Sample count \\
+				\midrule
+				1024 & 160 & 2 & \SI{7.6}{\ms}   & \SI{2.6}{\ms}   & 1000 \\
+				1024 & 160 & 3 & \SI{126.5}{\ms} & \SI{46.5}{\ms}  & 1000 \\
+				1024 & 160 & 4 & \SI{2.0}{\s}    & \SI{6.1}{\s}    & 200 \\
+				1024 & 160 & 5 & \SI{27.2}{\s}   & \SI{72.8}{\s}   & 20 \\
+				1024 & 160 & 6 & \SI{291.0}{\s}  & \SI{26.4}{\s}   & 5 \\
+				2048 & 256 & 2 & \SI{22.4}{\ms}  & \SI{7.3}{\ms}   & 1000 \\
+				2048 & 256 & 3 & \SI{314.2}{\ms} & \SI{97.8}{\ms}  & 1000 \\
+				2048 & 256 & 4 & \SI{4.1}{\s}    & \SI{1.2}{\s}    & 200 \\
+				2048 & 256 & 5 & \SI{57.1}{\s}   & \SI{15.3}{\s}   & 20 \\
+				2048 & 256 & 6 & \SI{665.4}{\s}  & \SI{256.0}{\s}  & 5 \\
+				\bottomrule
+		\end{tabular}
+		\caption{Performance of AM-Dec decrypting plaintexts $z$ of differnt dimensions}
+		\label{tbl:performance}
+\end{table}
+
+Figure \ref{fig:performance} visualizes this data in a logarithmic plot. It
+clearly shows that generally processing power grows exponentially with the
+magnitude of the input, which is expected as for an input of magnitude $k$,
+$O(10^k)$ possible values need to be tried.
+
+The figure also shows that different key parameters simply cause a linear
+difference in processing time, which also matches with the expectation that the
+performance of efficient modular exponentiation is linear in the bit length of
+its parameters.
+
+\begin{figure}[h]
+        \centering
+		\includegraphics[width=\textwidth]{elgamal_performance}
+		\caption{Performance of decryption in additively homomorphic ElGamal}
+		\label{fig:performance}
+\end{figure}
+
+\subsection{Improving performance of additively homomorphic ElGamal cryptosystem}
+
+One natural way to optimize performance of the additively homomorphic ElGamal
+cryptosystem is to parallelize the brute-force search in the decryption
+function. For any non-trivial message space this search quickly uses up the
+vast majority of processing time.
+
+Recall that this brute-force search has the goal of finding an $i$ such that
+$g^i \equiv h \pmod{p}$, which is done by iterating through permissible values
+of $i$. As the individual iterations of the loop are independent of each other,
+requiring only read-only access to a shared value of $h$, this task can be
+evenly divided between $n$ processors. This will speed up processing by a
+factor of $n$.
+
+% TODO Different optimization
 
 \end{document}

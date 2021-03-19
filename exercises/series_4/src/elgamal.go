@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"time"
 )
 
 // 10^6
-const maxAdditiveElGamal int64 = 1000000
+const maxAdditiveElGamal int64 = 10000000
 
 // ElGamal public key
 type PublicKey struct {
@@ -224,24 +225,49 @@ func RandomBits(bitLength int) ([]byte, error) {
 }
 
 func main() {
-	pub, priv, err := Parameters(160, 1024)
-	// pub, priv, err := Parameters(10, 16)
+	// qBits := 160
+	// pBits := 1024
+	qBits := 256
+	pBits := 2048
+
+	pub, priv, err := Parameters(qBits, pBits)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("Pub = %v\n", pub)
-	fmt.Printf("Priv = %v\n", priv)
+	// exponent size => sample count
+	// Sample count chosen such that:
+	// - We have at least 5, to be statistically relevant
+	// - We never go beyond 1000, that will be close enough to the true average
+	// - We take about 200s for those classes between the two extremes
+	var samples = map[int]int{
+		2: 1000, // 0.01s each => 10s
+		3: 1000, // 0.1s each => 100s
+		4: 200,  // 1s each => 200s
+		5: 20,   // 10s each => 200s
+		6: 5,    // 100s each => 500s
+	}
 
-	// test(1_000, pub, priv)
-	testAdditive(5, pub, priv)
-
+	// We'll print it in a format suitable for redirection to a CSV and further preprocessing
+	fmt.Println("keyid,exponent,duration_ms")
+	for exponent, sample_count := range samples {
+		results := timeAdditiveDecryptionSamples(sample_count, exponent, pub, priv)
+		for _, dur := range results {
+			fmt.Printf("\"q=%d,p=%d\",%d,%v\n", qBits, pBits, exponent, dur.Milliseconds())
+		}
+	}
 }
 
-func testAdditive(count int, pub PublicKey, priv PrivateKey) {
+func timeAdditiveDecryptionSamples(count int, log10 int, pub PublicKey, priv PrivateKey) []time.Duration {
+	times := make([]time.Duration, 0)
+
+	// We'll want numbers in [1 * 10^x .. 5 * 10^x]
+	lower := big.NewInt(int64(math.Pow10(log10)))
+	upper := big.NewInt(5 * int64(math.Pow10(log10)))
+
 	for i := 0; i < count; i += 1 {
-		a, _ := RandomInt(big.NewInt(0), big.NewInt(maxAdditiveElGamal/2))
-		b, _ := RandomInt(big.NewInt(0), big.NewInt(maxAdditiveElGamal/2))
+		a, _ := RandomInt(lower, upper)
+		b, _ := RandomInt(lower, upper)
 
 		ra, ca, err := AdditiveEncrypt(a, pub)
 		if err != nil {
@@ -259,14 +285,16 @@ func testAdditive(count int, pub PublicKey, priv PrivateKey) {
 		cc := big.NewInt(0)
 		cc.Mul(ca, cb).Mod(cc, pub.p)
 
-		c, err := AdditiveDecrypt(rc, cc, pub, priv)
+		start := time.Now()
+		_, err = AdditiveDecrypt(rc, cc, pub, priv)
+		times = append(times, time.Since(start))
 		if err != nil {
 			fmt.Printf("Error decrypting c: %v\n", err)
-		} else {
-			fmt.Printf("%v + %v = %v\n", a, b, c)
 		}
 
 	}
+
+	return times
 }
 
 func test(count int, pub PublicKey, priv PrivateKey) {
