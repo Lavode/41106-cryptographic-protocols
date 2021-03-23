@@ -193,7 +193,7 @@ func RandomInt(min *big.Int, max *big.Int) (*big.Int, error) {
 
 	// rand.Int returns in [0, max). We eventually want [min, max), so will
 	// start with [0, max - min)
-	x, err := rand.Int(rand.Reader, &offsetMax)
+	x, err := rand.Int(rand.Reader, offsetMax)
 	if err != nil {
 		return x, err
 	}
