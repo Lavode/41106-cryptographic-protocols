@@ -127,27 +127,37 @@ Textbook ElGamal was implemented in Go, found in the attached source code.
 Completness was experimentally tested by generating random numbers $x \in
 \mathbb{Z}^*_p$, and verifying that $Dec(sk, Enc(pk, x)) = x\ \forall x$.
 
+This implementation allows messages in $\mathbb{Z}_p^*$ rather than only in the
+subgroup $G$, which leaks information about the plaintexts. A secure
+implementation would have to e.g. limit input values to $\mathbb{Z}_q$ and map
+them to members of $G$.
+
 \section{Additively homomorphic ElGamal encryption}
 
-Additively homomorphic ElGamal encryption as described in the lecture was
-implemented too, again found in the attached source code. Completness was once
-more experimentally tested. Random pairs of numbers $x, y < 10^4$ were
-generated.  It was then verified that $\operatorname{AM-Dec}(sk,
-\operatorname{AM-Enc}(pk, x) \otimes \operatorname{AM-Enc}(pk, y)) = x + y$,
-where $\otimes$ is the component-wise multiplication  in $\mathbb{Z}_p^*$.
+Additively homomorphic ElGamal encryption as described in the lecture was then
+implemented on top of regular ElGamal. Completness was once more experimentally
+tested. Random pairs of numbers $x, y < 10^4$ were generated.  It was then
+verified that $\operatorname{AM-Dec}(sk, \operatorname{AM-Enc}(pk, x) \otimes
+\operatorname{AM-Enc}(pk, y)) = x + y$, where $\otimes$ is the component-wise
+multiplication  in $\mathbb{Z}_p^*$.
 
 \subsection{Performance of AM-Dec}
 
 Performance of the decryption operation was tested for two different keypairs,
-with inputs in $[1, max]$ where $10^2 \leq max \leq 10^6$. Tests were done as
+with inputs in $[1, max]$ where $10^2 \leq max \leq 10^7$. Tests were done as
 follows:
 
 \begin{itemize}
-		\item Two numbers $x, y$ in $[1, max / 2]$ were generated
-		\item $(R_x, C_x) := \operatorname{AM-Enc}(pk, x)$, $(R_y, C_y) := \operatorname{AM-Enc}(pk, y)$
+		\item Two numbers $x, y \in [max / 10, max / 2]$ were generated
+		\item $(R_x, C_x) := \operatorname{AM-Enc}(pk, x)$, $(R_y, C_y) :=
+				\operatorname{AM-Enc}(pk, y)$
 		\item $(R_z, C_z) := (R_x \cdot R_y, C_x \cdot C_y)$
-		\item The duration it took for the decryption operation $z := \operatorname{AM-Dec}(sk, (R_z, C_z))$ to complete was measured
-		\item The order of magnitude of $z$ as $\floor{\log_{10}{z}}$ and the measured duration were logged
+		\item The duration it took for the decryption operation $z :=
+				\operatorname{AM-Dec}(sk, (R_z, C_z))$ to complete was measured
+		\item This duration and the order of magnitude of $z$ as
+				$\floor{\log_{10}{z}}$ were logged
+		\item The process was repeated multiple times and for different values
+				of $max$
 \end{itemize}
 
 The resulting data was aggregated by keypair and order of magnitude, and the
@@ -164,7 +174,7 @@ will require nearly 10 times as many computations as the later.
 \begin{table}
 		\begin{tabular}{llllll}
 				\toprule
-				$\abs{p}$ & $\abs{q}$ & Order of magnitude of $z$ & Avg duration & Std dev & Sample count \\
+				$\abs{p}$ & $\abs{q}$ & Magnitude of $z$ & Avg duration & Std dev & Sample count \\
 				\midrule
 				1024 & 160 & 2 & \SI{7.6}{\ms}   & \SI{2.6}{\ms}   & 1000 \\
 				1024 & 160 & 3 & \SI{126.5}{\ms} & \SI{46.5}{\ms}  & 1000 \\
@@ -183,14 +193,16 @@ will require nearly 10 times as many computations as the later.
 \end{table}
 
 Figure \ref{fig:performance} visualizes this data in a logarithmic plot. It
-clearly shows that generally processing power grows exponentially with the
-magnitude of the input, which is expected as for an input of magnitude $k$,
-$O(10^k)$ possible values need to be tried.
+clearly shows that generally processing time grows exponentially with the
+magnitude of the input. This matches expectations as, for an input of magnitude
+$k$, $O(10^k)$ possible exponents need to be tried in the decryption process.
 
-The figure also shows that different key parameters simply cause a linear
-difference in processing time, which also matches with the expectation that the
-performance of efficient modular exponentiation is linear in the bit length of
-its parameters.
+% TODO sentence
+The figure also shows that different key parameters cause a linear difference
+in processing time. This matches with the expectation that the performance of
+efficient modular exponentiation is linear in the bit length of its parameters.
+Indeed the difference in decryption times approaches two, matching the
+difference of two in the bit length of the modulus.
 
 \begin{figure}[h]
         \centering
@@ -203,16 +215,18 @@ its parameters.
 
 One natural way to optimize performance of the additively homomorphic ElGamal
 cryptosystem is to parallelize the brute-force search in the decryption
-function. For any non-trivial message space this search quickly uses up the
-vast majority of processing time.
+function. For any non-trivial message space $[1, max]$ this search quickly uses
+up the vast majority of processing time.
 
 Recall that this brute-force search has the goal of finding an $i$ such that
 $g^i \equiv h \pmod{p}$, which is done by iterating through permissible values
-of $i$. As the individual iterations of the loop are independent of each other,
-requiring only read-only access to a shared value of $h$, this task can be
-evenly divided between $n$ processors. This will speed up processing by a
-factor of $n$.
+of $i \in [1, max]$. The iterations of the loop are independent of each other,
+requiring only read-only access to a shared value of $h$. This allows easily
+dividing the iterations between different processes, leading to a linear
+speedup with the number of parallel running processes.
 
-% TODO Different optimization
+An additional approach to optimizing this cryptosystem is to optimize
+performance of the underlying modular exponentation. If the generator $g$ can
+be chosen as a power of two for example, multiplication turns into a bit shift.
 
 \end{document}

@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// 10^6
+// 10^7
 const maxAdditiveElGamal int64 = 10000000
 
 // ElGamal public key
@@ -16,7 +16,7 @@ type PublicKey struct {
 	// Prime modulus of (Z / pZ)*
 	p *big.Int
 
-	// Prime order of subgroup of (Z / pZ)*
+	// Prime order of subgroup G of (Z / pZ)*
 	q *big.Int
 	// Generator of subgroup
 	g *big.Int
@@ -39,6 +39,7 @@ func (priv PrivateKey) String() string {
 	return fmt.Sprintf("(\n\tx = %d\n)", priv.x)
 }
 
+// Textbook AM-ElGamal encryption
 func AdditiveEncrypt(msg *big.Int, pub PublicKey) (*big.Int, *big.Int, error) {
 	h := big.NewInt(0)
 	h.Set(pub.g)
@@ -47,13 +48,15 @@ func AdditiveEncrypt(msg *big.Int, pub PublicKey) (*big.Int, *big.Int, error) {
 	return Encrypt(h, pub)
 }
 
+// Textbook AM-ElGamal decryption
 func AdditiveDecrypt(R *big.Int, c *big.Int, pub PublicKey, priv PrivateKey) (*big.Int, error) {
 	h, err := Decrypt(R, c, pub, priv)
 	if err != nil {
 		return big.NewInt(0), err
 	}
 
-	// Size limitation on maxAdditiveElGamal will ensure it'll comfortably fit in an int64
+	// Reasonable size limitations of maxAdditiveElGamal will ensure it'll
+	// comfortably fit in an int64
 	for i := int64(0); i <= maxAdditiveElGamal; i += 1 {
 		exponent := big.NewInt(i)
 		power := big.NewInt(0)
@@ -67,14 +70,13 @@ func AdditiveDecrypt(R *big.Int, c *big.Int, pub PublicKey, priv PrivateKey) (*b
 	return big.NewInt(0), fmt.Errorf("Did not find exponent, input must have been invalid")
 }
 
+// Textbook ElGamal encryption
+//
+// Note that this permits messages in Z_p rather than only in the subgroup G,
+// so leaks information about the plaintexts.
 func Encrypt(msg *big.Int, pub PublicKey) (*big.Int, *big.Int, error) {
 	R := big.NewInt(0)
 	c := big.NewInt(0)
-
-	// TODO: Ensuer m < q, then map to G
-	// if msg.Cmp(pub.q) != -1 {
-	// 	return R, c, fmt.Errorf("Cannot encrypt m = %v > q = %v", msg, pub.q)
-	// }
 
 	r, err := RandomInt(big.NewInt(0), pub.q)
 	if err != nil {
@@ -82,8 +84,6 @@ func Encrypt(msg *big.Int, pub PublicKey) (*big.Int, *big.Int, error) {
 	}
 	// R = g^r mod p
 	R.Exp(pub.g, r, pub.p)
-
-	// c = m * y^r mod p.
 
 	// c = y
 	c.Set(pub.y)
@@ -97,10 +97,9 @@ func Encrypt(msg *big.Int, pub PublicKey) (*big.Int, *big.Int, error) {
 	return R, c, nil
 }
 
+// Textbook ElGamal decryption
 func Decrypt(R *big.Int, c *big.Int, pub PublicKey, priv PrivateKey) (*big.Int, error) {
 	msg := big.NewInt(0)
-
-	// m = c / R^x
 
 	// m = R^x
 	msg.Exp(R, priv.x, pub.p)
@@ -113,7 +112,8 @@ func Decrypt(R *big.Int, c *big.Int, pub PublicKey, priv PrivateKey) (*big.Int, 
 	return msg, nil
 }
 
-// Parameters are chosen as per the DSS spec
+// Parameters are chosen as per the DSS spec, with the subgroup a Schnorr
+// subgroup.
 func Parameters(subgroupBitLength int, groupBitLength int) (PublicKey, PrivateKey, error) {
 	pub := PublicKey{}
 	priv := PrivateKey{}
@@ -146,7 +146,7 @@ func Parameters(subgroupBitLength int, groupBitLength int) (PublicKey, PrivateKe
 	pub.p = p
 
 	// And lastly the generator, constructed such that it is cyclic
-	// (euclid's theorem) and of order q (as q prime)
+	// (by euclid's theorem) and of order q (as q prime)
 	g := big.NewInt(1)
 	for {
 		// In [2, p) = [2, p-1]
@@ -157,7 +157,8 @@ func Parameters(subgroupBitLength int, groupBitLength int) (PublicKey, PrivateKe
 
 		// exponent = (p - 1) / q
 		exponent := big.NewInt(0)
-		exponent.Sub(pub.p, big.NewInt(1)).Div(exponent, q)
+		exponent.Sub(pub.p, big.NewInt(1))
+		exponent.Div(exponent, q)
 
 		// g = h^(exponent) mod p
 		g.Exp(h, exponent, pub.p)
@@ -187,11 +188,12 @@ func Parameters(subgroupBitLength int, groupBitLength int) (PublicKey, PrivateKe
 //
 // Returns a value in [min, max)
 func RandomInt(min *big.Int, max *big.Int) (*big.Int, error) {
-	var max2 big.Int
-	max2.Sub(max, min)
+	offsetMax := big.NewInt(0)
+	offsetMax.Sub(max, min)
 
-	// rand.Int returns in [0, max). We want [min, max)
-	x, err := rand.Int(rand.Reader, &max2)
+	// rand.Int returns in [0, max). We eventually want [min, max), so will
+	// start with [0, max - min)
+	x, err := rand.Int(rand.Reader, &offsetMax)
 	if err != nil {
 		return x, err
 	}
@@ -258,6 +260,7 @@ func main() {
 	}
 }
 
+// Time the decryption time for AM-Dec
 func timeAdditiveDecryptionSamples(count int, log10 int, pub PublicKey, priv PrivateKey) []time.Duration {
 	times := make([]time.Duration, 0)
 
@@ -297,6 +300,7 @@ func timeAdditiveDecryptionSamples(count int, log10 int, pub PublicKey, priv Pri
 	return times
 }
 
+// Perform random correctness tests of textbook ElGamal
 func test(count int, pub PublicKey, priv PrivateKey) {
 	for i := 0; i < count; i += 1 {
 		m, err := RandomInt(big.NewInt(1), pub.q)
