@@ -1,0 +1,179 @@
+\documentclass[a4paper]{scrreprt}
+
+% Uncomment to optimize for double-sided printing.
+% \KOMAoptions{twoside}
+
+% Set binding correction manually, if known.
+% \KOMAoptions{BCOR=2cm}
+
+% Localization options
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+% Quotations
+\usepackage{dirtytalk}
+
+% Floats
+\usepackage{float}
+
+\usepackage{numbertabbing}
+
+% Enhanced verbatim sections. We're mainly interested in
+% \verbatiminput though.
+\usepackage{verbatim}
+
+% Automatically remove leading whitespace in lstlisting
+\usepackage{lstautogobble}
+
+% PDF-compatible landscape mode.
+% Makes PDF viewers show the page rotated by 90°.
+\usepackage{pdflscape}
+
+% Advanced tables
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+
+% Fancy tablerules
+\usepackage{booktabs}
+
+% Graphics
+\usepackage{graphicx}
+
+% Current time
+\usepackage[useregional=numeric]{datetime2}
+
+% Float barriers.
+% Automatically add a FloatBarrier to each \section
+\usepackage[section]{placeins}
+
+% Custom header and footer
+\usepackage{fancyhdr}
+
+\usepackage{geometry}
+\usepackage{layout}
+
+% Math tools
+\usepackage{mathtools}
+% Math symbols
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{amsthm}
+% General symbols
+\usepackage{stmaryrd}
+
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+% Indistinguishable operator (three stacked tildes)
+\newcommand*{\diffeo}{% 
+  \mathrel{\vcenter{\offinterlineskip
+  \hbox{$\sim$}\vskip-.35ex\hbox{$\sim$}\vskip-.35ex\hbox{$\sim$}}}}
+
+% Bullet point
+\newcommand{\tabitem}{~~\llap{\textbullet}~~}
+
+\floatstyle{ruled}
+\newfloat{algo}{htbp}{algo}
+\floatname{algo}{Algorithm}
+% For use in algorithms
+\newcommand{\str}[1]{\textsc{#1}}
+\newcommand{\var}[1]{\textit{#1}}
+\newcommand{\op}[1]{\textsl{#1}}
+
+\pagestyle{plain}
+% \fancyhf{}
+% \lhead{}
+% \lfoot{}
+% \rfoot{}
+% 
+% Source code & highlighting
+\usepackage{listings}
+
+% SI units
+\usepackage[binary-units=true]{siunitx}
+\DeclareSIUnit\cycles{cycles}
+
+% Convenience commands
+\newcommand{\mailsubject}{41106 - Cryptography Protocols - Series 6}
+\newcommand{\maillink}[1]{\href{mailto:#1?subject=\mailsubject}
+                               {#1}}
+
+% Should use this command wherever the print date is mentioned.
+\newcommand{\printdate}{\today}
+
+\subject{41106 - Cryptographic Protocols}
+\title{Series 6}
+
+\author{Michael Senn \maillink{michael.senn@students.unibe.ch} - 16-126-880}
+
+\date{\printdate}
+
+% Needs to be the last command in the preamble, for one reason or
+% another. 
+\usepackage{hyperref}
+
+\begin{document}
+\maketitle
+
+
+\setcounter{chapter}{5}
+
+\chapter{Series 6}
+
+\section{Soundness error}
+
+Assume $P$ is a cheating prover, $V$ an honest verifier.
+
+\subsection{ZKP for graph isomorphism}
+
+Assuming $V$ does not know a graph $G_1$ isomorph to $G_0$, $V$ can generate
+$H$ such that it is either isomorph to $G_0$, or to $G_1$. As such $V$ has to
+correctly guess which value of $b$ the prover will generate in order to
+convince $V$ in one round. Assuming $b$ is a fair coin, the soundness error is
+hence $2^{-1}$.
+
+With $k$ sequential rounds, the soundness error can be reduced to $2^{-k}$.
+
+\subsection{ZKPK for discrete log}
+
+% In order to convince the verifier, $P$ must provide an $s$ such that $g^s \cdot
+% y^c \equiv t$. As $t$ is chosen before any information is received from the
+% verifier, it can be considered a random value not controlled by $P$.
+% 
+% Finding $g^s$ is easy as $G$ is a group, but finding $s$ from it is the DLP so
+% not feasible under the assumptions put on the system.
+
+\subsection{ZKPK for RSA inverse}
+
+\section{Proof-of-knowledge protocol of a representation}
+
+\subsection{Soundness}
+
+Let $(t, c, (s_1, \ldots, s_n)), (t, c', (s'_1, \ldots, s'_n))$ be two accepting
+transcripts. Then:
+
+\begin{align*}
+		(s_i - s'_i) \cdot (c' - c)^{-1} & = ((r_i - c \cdot \alpha_i) - (r_i - c' \cdot \alpha_i)) \cdot (c' - c)^{-1} \\
+										 & = (c' \cdot \alpha_i - c \cdot \alpha_i) \cdot (c' - c)^{-1} \\
+										 & = \alpha_i \cdot (c' - c) \cdot (c' - c)^{-1} \\
+										 & = \alpha_i
+\end{align*}
+
+So we have a knowledge extractor for $\alpha_1, \ldots, \alpha_n$.
+
+\subsection{Zero knowledge}
+
+Pick $c$ and $s_i$ randomly. Let $t = \prod g_i^{s_i} \cdot y^c$. The
+verification condition of the protocol holds by the choice of $t$. $c$ is
+chosen the same way it is in the protocol so has the same distribution. $s_i$
+in the actual protocol is the difference between two values one of which is
+chosen randomly, so too has the same distribution as in our simulation. $t$
+lastly in the actual protocol is the product of random values so also has a
+distribution equal to the one of the simulation. Hence the proof has the
+zero-knowledge property.
+
+\section{Encrypting a vote}
+
+
+\end{document}
