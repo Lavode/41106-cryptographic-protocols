@@ -251,8 +251,8 @@ protocol.
 \subsection{Proving validity of vote}
 
 To have the prover $P$ prove that its vote is a valid encryption of either $v =
-0$ or $v = 1$, consider first the proof of equality given in the lecture, which
-allows to prove that one knows an $x$ such that:
+0$ or $v = 1$, consider first the proof of equality (`EQ') given in the
+lecture, which allows to prove that one knows an $x$ such that:
 
 \begin{align*}
   \log_{g_1}(y_1) = x = \log_{g_2}(y_2)
@@ -268,14 +268,12 @@ know the secret exponent $x$ of the cryptosystem. Given an encryption $(R, C) =
   \log_{g}(R) = r = \log_{y}(C / g^v)
 \end{align*}
 
-We then combine two such proofs using the `proof of disjunction' (`OR proof')
-given in the lecture, for the following protocol. In the notation below we
-assume that $v = 0$, for $v = 1$ simply swap all roles. Any variable with a $'$
-denotes a variable which was simulated, any variable without one which was
-generated according to the specification of the proof of equality. $\hat{r}$
-denotes the blinding factor of the proof of equality, to prevent conflict with
-$r$ which is the blinding factor of ElGamal (and also the witness for which we
-want to prove knowledge).
+We then combine two such proofs using the proof of disjunction (`OR') discussed
+in the lecture, leading to a ZKPK of vote validity shown in algorithm
+\ref{alg:valid_vote}. For notation, let any variable with a $'$ denote
+variables which were simulated, and any without denote variables which where
+generated based on the specification of EQ. Let $\hat{r}$ denote the blinding
+factor of EQ, to prevent conflict with the blinding factor $r$ of ElGamal.
 
 \begin{algo}
   \vbox{
