@@ -2,4 +2,6 @@ slides/*
 exercises/**/*.log
 exercises/**/*.pdf
 exercises/series_4/src/elgamal
-.Rproj.user
+**/r/.Rproj.user
+**/r/.RData
+**/r/.Rhistory
