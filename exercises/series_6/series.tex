@@ -175,5 +175,141 @@ zero-knowledge property.
 
 \section{Encrypting a vote}
 
+Consider the additively homomorphic ElGamal cryptosystem with public key $y$.
+
+\subsection{Proving knowledge of plaintext of additively-homomorphic ElGamal ciphertext}
+
+Given $i \in \mathbb{Z}_q$, $(R, C) = \operatorname{AM-Enc}(y, i) = (g^r, g^i
+\cdot y^r)$ consider the following protocol to prove knowledge of $i$ such that
+$(R, C)$ is a valid encryption thereof. This is an adaptation of the `proof of
+representation' given in the lecture.
+
+Note also how, in the context of a voting scheme, $i$ is likely to only take on
+one of polynomially many values. As such a simple Schnorr proof for knowledge
+of the discrete logarithm of $g^i$ would be insecure, as an adversary could
+retrieve $i$ by brute force.
+
+\begin{algo}
+  \vbox{
+    \small
+    \begin{numbertabbing}
+      xxxxxxxxxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxx\=MMMMMMMMMMMMMMMMMMM\=\kill
+      \textbf{Prover}$(r, i)$ \>\> \textbf{Verifier}$(R, C)$ \\
+      $r_1, r_2 \xleftarrow{R} \mathbb{Z}_q$ \\
+      $t = g^{r_1} \cdot y^{r_2}$ \> $\xrightarrow{t}$ \> \\
+      \> $\xleftarrow{c}$ \> $c \xleftarrow{R} \mathbb{Z}_q$ \\
+      $s_1 = r_1 - c \cdot i$ \> \> \\
+      $s_2 = r_2 - c \cdot r$ \> \> \\
+      \> $\xrightarrow{s_1, s_2}$ \> \\
+      \> \> Verify $t = g^{s_1} \cdot y^{s_2} \cdot C^c$
+    \end{numbertabbing}
+  }
+  \caption{ZKPK of plaintext of additively homomorphic ElGamal}
+  \label{alg:zkpk_elgamal}
+\end{algo}
+
+\subsubsection{Completness}
+
+Consider a honest prover and verifier. Then:
+\begin{align*}
+  t & = g^{r_1} \cdot y^{r_2} \\
+    & = g^{r_1 - c i + c i} \cdot y^{r_2 - c r + c r} \\
+    & = g^{s_1} \cdot g^{c i} \cdot y^{s_2} \cdot y^{c r} \\
+    & = g^{s_1} \cdot y^{s_2} \cdot (g^i \cdot y^r)^c \\
+    & = g^{s_1} \cdot y^{s_2} \cdot (C)^c \\
+\end{align*}
+
+\subsubsection{Soundness}
+
+Let $(t, c, (s_1, s_2)), (t, c', (s_1', s_2'))$ be two accepting transcripts.
+Then:
+\begin{align*}
+  (c' - c) \cdot (s_1 - s_1') & = (c' - c) \cdot ((r_1 - ci) - (r_1 - c' i)) \\
+                              & = (c' - c) \cdot (c' i - ci) \\
+                              & = i
+\end{align*}
+
+And:
+\begin{align*}
+  (c' - c) \cdot (s_2 - s_2') & = (c' - c) \cdot ((r_2 - cr) - (r_2 - c' r)) \\
+                              & = (c' - c) \cdot (c' r - cr) \\
+                              & = r
+\end{align*}
+
+Are extractors for $r$ and $i$.
+
+\subsubsection{Zero-knowledge}
+
+Pick $c$, $s_1$ and $s_2$ randomly. Let $t = g^{s_1} \cdot y^{s_2} \cdot C^c$.
+$c$ has the same distribution as in the actual protocol as it is chosen the
+same way. $s_i$ being randomly chosen makes it have the same distribution as in
+the actual protocol, where it is the difference between a randomly chosen $r_i$
+and another number. The simulated $t$ lastly fulfills the requirement for
+completness, while also being uniformly from the message space as in the actual
+protocol.
+
+\subsection{Proving validity of vote}
+
+To have the prover $P$ prove that its vote is a valid encryption of either $v =
+0$ or $v = 1$, consider first the proof of equality given in the lecture, which
+allows to prove that one knows an $x$ such that:
+
+\begin{align*}
+  \log_{g_1}(y_1) = x = \log_{g_2}(y_2)
+\end{align*}
+
+Where $g_1$, $g_2$ are two independent generators. This can be applied to the
+additively homomorphic ElGamal cryptosystem with $g_1 = g$, $g_2 = y$, $y_1 =
+R$, $y_2 = C / g^v$. $g$ and $y$ are independent to the prover as it does not
+know the secret exponent $x$ of the cryptosystem. Given an encryption $(R, C) =
+(g^r, g^v \cdot y^r)$:
+
+\begin{align*}
+  \log_{g}(R) = r = \log_{y}(C / g^v)
+\end{align*}
+
+We then combine two such proofs using the `proof of disjunction' (`OR proof')
+given in the lecture, for the following protocol. In the notation below we
+assume that $v = 0$, for $v = 1$ simply swap all roles. Any variable with a $'$
+denotes a variable which was simulated, any variable without one which was
+generated according to the specification of the proof of equality. $\hat{r}$
+denotes the blinding factor of the proof of equality, to prevent conflict with
+$r$ which is the blinding factor of ElGamal (and also the witness for which we
+want to prove knowledge).
+
+\begin{algo}
+  \vbox{
+    \small
+    \begin{numbertabbing}
+      xxxxxxxxxxxxxxxxxxxx\=xxxxxxxxxxxxxxxxxxxx\=MMMMMMMMMMMMMMMMMMM\=\kill
+      \textbf{Prover}$(r, i)$ \>\> \textbf{Verifier}$(R, C)$ \\
+      // Correct proof for v = 0 \\
+      $\hat{r} \xleftarrow{R} \mathbb{Z}_q$ \\
+      $t_1 = g^{\hat{r}}$ \\
+      $t_2 = y^{\hat{r}}$ \\
+
+      // Simulate proof for v = 1 \\
+      $c' \xleftarrow{R} \mathbb{Z}_q$ \\
+      $s' \xleftarrow{R} \mathbb{Z}_q$ \\
+      $t'_1 = g^{s'} \cdot R^{c'}$ \\
+      $t'_2 = y^{s'} \cdot (C / g^1)^{c'}$ \\
+      \> $\xrightarrow{t_1, t_2, t_1', t_2'}$ \\
+      \> $\xleftarrow{\tilde{c}}$ \> $\tilde{c} \xleftarrow{R} \mathbb{Z}_q$ \\
+      $c = \tilde{c} + c'$ \\
+      $s = \hat{r} - c \cdot r$ \\
+      \> $\xrightarrow{s, c, s', c'}$ \\
+      \> \> Verify that: \\
+      \> \> $t_1 = g^s \cdot R^c$ \\
+      \> \> $t_2 = y^s \cdot (C / g^0)^c$ \\
+      \> \> $t'_1 = g^{s'} \cdot R^{c'}$ \\
+      \> \> $t'_2 = y^{s'} \cdot (C / g^1)^{c'}$
+    \end{numbertabbing}
+  }
+  \caption{Proving validity of vote in homomorphic ElGamal}
+  \label{alg:valid_vote}
+\end{algo}
+
+Completness, soundness and the zero-knowledge property follow directly from the
+respective properties of the utilized proof of equality.
 
 \end{document}
