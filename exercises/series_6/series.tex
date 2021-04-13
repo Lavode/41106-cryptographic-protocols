@@ -140,8 +140,8 @@ With $k$ sequential rounds, the soundness error can be reduced to $2^{-k}$.
 A cheating prover is able to convince a verifier if it manages to correctly
 guess the value of the challenge $c$ before having to commit. If it does so, it
 can construct a commitment $t$ which will pass verification without having to
-know the witness $x$ such that $g^x = y$, by following the simulation algorithm
-of the protocol.
+know $x$ such that $g^x = y$, by following the simulation algorithm of the
+protocol.
 
 The chance of correctly guessing the challenge ahead of time is $q^{-1}$. As
 such this chance is already inversely exponential in the security parameter,
@@ -312,7 +312,8 @@ all variables.
       \> \> $t_1 = g^s \cdot R^c$ \\
       \> \> $t_2 = y^s \cdot (C / g^0)^c$ \\
       \> \> $t'_1 = g^{s'} \cdot R^{c'}$ \\
-      \> \> $t'_2 = y^{s'} \cdot (C / g^1)^{c'}$
+      \> \> $t'_2 = y^{s'} \cdot (C / g^1)^{c'}$ \\
+	  \> \> $c + c' = \tilde{c}$
     \end{numbertabbing}
   }
   \caption{Proving validity of vote in homomorphic ElGamal}
