@@ -1,0 +1,218 @@
+\documentclass[a4paper]{scrreprt}
+
+% Uncomment to optimize for double-sided printing.
+% \KOMAoptions{twoside}
+
+% Set binding correction manually, if known.
+% \KOMAoptions{BCOR=2cm}
+
+% Localization options
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+% Quotations
+\usepackage{dirtytalk}
+
+% Floats
+\usepackage{float}
+
+\usepackage{numbertabbing}
+
+% Enhanced verbatim sections. We're mainly interested in
+% \verbatiminput though.
+\usepackage{verbatim}
+
+% Automatically remove leading whitespace in lstlisting
+\usepackage{lstautogobble}
+
+% PDF-compatible landscape mode.
+% Makes PDF viewers show the page rotated by 90°.
+\usepackage{pdflscape}
+
+% Advanced tables
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+
+% Fancy tablerules
+\usepackage{booktabs}
+
+% Graphics
+\usepackage{graphicx}
+
+% Current time
+\usepackage[useregional=numeric]{datetime2}
+
+% Float barriers.
+% Automatically add a FloatBarrier to each \section
+\usepackage[section]{placeins}
+
+% Custom header and footer
+\usepackage{fancyhdr}
+
+\usepackage{geometry}
+\usepackage{layout}
+
+% Math tools
+\usepackage{mathtools}
+% Math symbols
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{amsthm}
+% General symbols
+\usepackage{stmaryrd}
+
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+% Indistinguishable operator (three stacked tildes)
+\newcommand*{\diffeo}{% 
+  \mathrel{\vcenter{\offinterlineskip
+  \hbox{$\sim$}\vskip-.35ex\hbox{$\sim$}\vskip-.35ex\hbox{$\sim$}}}}
+
+% Bullet point
+\newcommand{\tabitem}{~~\llap{\textbullet}~~}
+
+\floatstyle{ruled}
+\newfloat{algo}{htbp}{algo}
+\floatname{algo}{Algorithm}
+% For use in algorithms
+\newcommand{\str}[1]{\textsc{#1}}
+\newcommand{\var}[1]{\textit{#1}}
+\newcommand{\op}[1]{\textsl{#1}}
+
+\pagestyle{plain}
+% \fancyhf{}
+% \lhead{}
+% \lfoot{}
+% \rfoot{}
+% 
+% Source code & highlighting
+\usepackage{listings}
+
+% SI units
+\usepackage[binary-units=true]{siunitx}
+\DeclareSIUnit\cycles{cycles}
+
+% Convenience commands
+\newcommand{\mailsubject}{41106 - Cryptography Protocols - Series 7}
+\newcommand{\maillink}[1]{\href{mailto:#1?subject=\mailsubject}
+                               {#1}}
+
+% Should use this command wherever the print date is mentioned.
+\newcommand{\printdate}{\today}
+
+\subject{41106 - Cryptographic Protocols}
+\title{Series 7}
+
+\author{Michael Senn \maillink{michael.senn@students.unibe.ch} - 16-126-880}
+
+\date{\printdate}
+
+% Needs to be the last command in the preamble, for one reason or
+% another. 
+\usepackage{hyperref}
+
+\begin{document}
+\maketitle
+
+
+\setcounter{chapter}{6}
+
+\chapter{Series 7}
+
+Let $|$ denote the concatenation of bit strings.
+
+\section{Oblivious transfer from private set intersection}
+
+Consider the following $\binom{2}{1}-\text{OT}$ protocol based on PSI.  Assume
+a slightly modified $PSI$ protocol where $R$ learns of the set intersection
+first, but unlike in the lecture does not communicate it to $S$. This can
+easily be achieved as $S$ cannot determine the set intersection without the
+help of $R$.
+
+\begin{algo}
+  \vbox{
+    \small
+    \begin{numbertabbing}
+      xxxxxxxxxxxxxxxxxx\=xxxxxxxxxxxxx\=xxxxxxxx\=xxxxxxxxxxxxx\=MMMMMMMMMMMMMMMMMMM\=\kill
+      $S(x_0, x_1)$ \> \> \> \> $R(b)$ \\
+      $X = \{x_0 | 0, x_1 | 1\}$ \> \> \> \> $Y = \{0 | b, 1 | b\}$ \\
+      \> $\xrightarrow{\mathmakebox[1cm]{X}}$ \> PSI \> $\xleftarrow{\mathmakebox[1cm]{Y}}$ \\
+	  \> \> \> $\xrightarrow{\mathmakebox[1cm]{Z}}$ \\
+	  \> \> \> \> Let $z$ be the first element of $Z$ \\
+	  \> \> \> \> $z_0 | z_1 := z$ \\
+      \> \> \> \> \textbf{return} $z_0$
+    \end{numbertabbing}
+  }
+  \caption{2-1 OT using PSI}
+  \label{alg:ot_from_psi}
+\end{algo}
+
+\subsection{Correctness}
+
+From the definition of $X$ and $Y$ it directly follows that the result of the
+private set intersection is $Z = X \cap Y = \{x_b | b\}$. As such it only
+contains one element, and that element's first bit is indeed $x_b$.
+
+\subsection{Security for S}
+
+By the security property of PSI, a semi-honest $R$ learns only $\{x_b | b\}$,
+and as such does not learn anything about $x_{1 - b}$. Clearly a malicious $R$
+could submit $Y = \{00, 01, 10, 11\}$ and learn both values. In such a model,
+additional security would have to be provided via e.g. a zero-knowledge proof.
+
+\subsection{Security for R}
+
+By the security property of our slightly modified PSI system, $S$ learns
+nothing at all about $b$.
+
+\section{Private set intersection from additively homomorphic encryption}
+
+\section{Secure two-party AND using oblivious transfer}
+
+Note first that for $x = 1$ the binary and $z = x \land y$ clearly identifies
+$y = z$. Similarly $y = 1 \Rightarrow x = z$. As such an adversary submitting
+$k = 1$ will always learn the secret value of the other party due to the nature
+of the binary operation, and security is only relevant for $k = 0$.
+
+Consider now the following protocol to calculate the binary AND $z = x \land y$
+of two bits.
+
+\begin{algo}
+  \vbox{
+    \small
+    \begin{numbertabbing}
+      xxxxxxxxxxxxxxxxxx\=xxxxxxxxxxxxx\=xxxxxxxx\=xxxxxxxxxxxxx\=MMMMMMMMMMMMMMMMMMM\=\kill
+      $A(x)$ \> \> \> \> $B(y)$ \\
+	  $x_0 = 0$ \\
+	  $x_1 = x$ \\
+      \> $\xrightarrow{\mathmakebox[1cm]{x_0, x_1}}$ \> OT \> $\xleftarrow{\mathmakebox[1cm]{y}}$ \\
+	  \> \> \> $\xrightarrow{\mathmakebox[1cm]{x_y}}$ \\
+	  \> $\xleftarrow{\mathmakebox[5cm]{x_y}}$ \\
+	  \textbf{return} $x_y$ \> \> \> \> \textbf{return} $x_y$
+    \end{numbertabbing}
+  }
+  \caption{Binary AND using 2-1 OT}
+  \label{alg:and_from_ot}
+\end{algo}
+
+\subsection{Completness}
+
+Note first how $y = 0 \Rightarrow x_y = x_0 = 0$. Further $x = 0 \Rightarrow
+x_0 = x_1 = 0 \Rightarrow x_y = 0$. Lastly $x = y = 1 \Rightarrow x_y = x_1 =
+1$. As such $x_y = x \land y$.
+
+\subsection{Security for A}
+
+As explained above, let $y = 0$. By the security property of $\binom{2}{1}$ OT,
+B will learn nothing about $x_{1 - y} = x_1 = x$. As such nothing about the
+private input $x$ is leaked.
+
+\subsection{Security for B}
+
+Similarly let $x = 0$. By the security property of $\binom{2}{1}$ OT, $A$ will
+learn nothing about $y$, and as such has only access to $x_y = 0$.  However as
+$x_0 = x_1 = 0$ no information about the private input $y$ is leaked.
+
+\end{document}
