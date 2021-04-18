@@ -62,13 +62,19 @@
 % General symbols
 \usepackage{stmaryrd}
 
+% Utilities for quotations
+\usepackage{csquotes}
+
+% Bibliography
+\usepackage[
+  style=alphabetic,
+  backend=biber, % Default backend, just listed for completness
+  sorting=ynt % Sort by year, name, title
+]{biblatex}
+\addbibresource{references.bib}
+
 \DeclarePairedDelimiter\abs{\lvert}{\rvert}
 \DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
-
-% Indistinguishable operator (three stacked tildes)
-\newcommand*{\diffeo}{% 
-  \mathrel{\vcenter{\offinterlineskip
-  \hbox{$\sim$}\vskip-.35ex\hbox{$\sim$}\vskip-.35ex\hbox{$\sim$}}}}
 
 % Bullet point
 \newcommand{\tabitem}{~~\llap{\textbullet}~~}
@@ -169,6 +175,142 @@ nothing at all about $b$.
 
 \section{Private set intersection from additively homomorphic encryption}
 
+The following solution is based on a PSI algorithm for semi-honest adversaries
+presented by Freedman, Nissim and Pinkas.  \autocite{efficientPSIPolynomials}
+
+Let $A$ be a party with private input $X$ of order $n$, $B$ a party with
+private input $Y$. Let $y \in Y$.  Consider the $n$-th degree polynomial $P(y)
+= \prod_{x \in X}(x - y) = \sum_{i=0}^{n} a_i \cdot y^i$ over a finite field
+$GF(q)$ of prime order. Note how by its constructions its roots are all the
+elements of $X$, that is $P(y) = 0 \Leftrightarrow y \in X$.
+
+Consider now the additively homomorphic ElGamal cryptosystem with public key
+$pk$. Note how, in addition to allowing addition of ciphertexts, it also
+permits multiplication of a ciphertext by a plaintext constant. Let $(R, C) =
+(g^r, g^m \cdot pk^r)$ be an encryption of $m$. Then, $(R^c, C^c) = (g^{rc},
+g^{mc} \cdot pk^{rc})$ is a valid encryption of $c \cdot m$.
+
+\subsection{Set membership}
+
+The following protocol allows $A$ to learn whether $P(y) = 0 \Leftrightarrow y
+\in X$, without $B$ learning it as well.
+
+\begin{algo}
+  \vbox{
+    \small
+    \begin{numbertabbing}
+			xx\=xx\=xxxxxxxxxxxxxxxxxxxx\=xxxxxxxxxxxx\=xx\=xx\=MMMMMMMMMMMMMMMMMMM\=\kill
+			$A(X)$\>  \>                        \>            \> $B(y)$ \\
+			// Encrypt coefficients of $P(y)$ \\
+			\textbf{For} $i = 0$ to $n$: \\
+			\> $c_i := \operatorname{AM-Enc}(pk, a_i)$ \> \> $\xrightarrow{\mathmakebox[1.5cm]{(c_0, \dots, c_n)}}$ \> $r \xleftarrow{R} GF(q)$ \\
+			\> \> \> \> \textbf{For} $i = 0$ to $n$: \\
+			\> \> \> \> \> $c'_i := (c_i)^{y^n}$ \\
+			\> \> \> \> $c := \prod c'_i$ // $P(y)$ \\
+			\> \> \> \> $c_{\text{blind}} := c^r$ // $r \cdot P(y)$ \\
+			$m := \operatorname{AM-Dec}(sk, c_y)$ \> \> \> $\xleftarrow{\mathmakebox[1.5cm]{c_y}}$ \> $c_y := c_{\text{blind}} \cdot \operatorname{AM-Enc}(pk, y)$ // $r \cdot P(y) + y$ \\
+			\textbf{Return} $m == y$
+	\end{numbertabbing}
+  }
+  \caption{Private set membership from additively homomorphic encryption}
+  \label{alg:set_membership}
+\end{algo}
+
+\subsubsection{Correctness}
+
+Note first how $c$ is an encryption of $P(y)$ due to the properties of the
+additively homomorphic ElGamal cryptosystem. Then, $c_{\text{blind}}$ is an
+encryption of $r \cdot P(y)$ and $c_y$ of $r \cdot P(y) + y$.
+
+As established, $y \in X \Leftrightarrow P(y) = 0$. As $r \neq 0$ and $q$
+prime, $P(y) = 0 \Leftrightarrow r \cdot P(y) + y = y$.
+
+If $y \not \in X$ then $r \cdot P(y)$ is going to be a random value in
+$GF(q)$, which might not be decipherable by $\operatorname{AM-Dec}$.
+Being able to decipher it is not required however, as it is sufficient to
+establish that it is not a valid encryption of $y$ to conclude that $y \not \in
+X$.
+
+Note that due to the blinding factor $r$ this is only a probabilistic
+assertion. Specifically it is possible that there exists $x \in X$, $y in Y$,
+$x \neq y$, $r \in GF(q)$ such that $r \cdot P(y) + y \equiv x \pmod{q}$.
+
+The chance of such a false positive happening are $\frac{k}{q}$, with $k$ the
+size of the message space, $q$ the size of the finite field. With a properly
+sized finite field this will as such be negligible.
+
+\subsubsection{Security for A}
+
+As $B$ only learns of encryptions of the polynomial's coefficents, $B$ learns
+nothing about the secret input $X$ of $A$. As $B$ further calculates $c_y$
+using an additively homomorphic cryptosystem it does also not learn whether $y
+\in X$, as it cannot distinguish an encryption of $y$ from an encryption of a
+random value $k \in GF(q)$.
+
+\subsubsection{Security for B}
+
+Note how the blinding factor $r$ ensures that $r \cdot P(y) + y$ is a random
+value if $y \not \in X$, as without it $A$ would be able to learn $y$ by using
+the polynomial $G(y) = P(y) + y$, at which point $G^{-1}(P(y) + y) = y$.
+
+As such, $A$ learns at most the value $k = r \cdot P(y) + y = y \Leftrightarrow
+y \in X$.
+
+\subsection{Private set intersection}
+
+To extend this to set intersection, $B$ will simply execute its part for every
+$y \in Y$, sending $c_{y_1} \ldots c_{y_m}$ where $m = \abs{Y}$. $A$ then
+checks which of the received ciphertexts are valid encryptions of elements $x
+\in X$, the union of which is equal to $X \cap Y$.
+
+\begin{algo}
+  \vbox{
+    \small
+    \begin{numbertabbing}
+			xx\=xx\=xxxxxxxxxxxxxxxxxxxx\=xxxxxxxxxxxx\=xx\=xx\=MMMMMMMMMMMMMMMMMMM\=\kill
+			$A(X)$\>  \>                        \>            \> $B(y)$ \\
+			// Let $c_i$ be encryped coefficients of $P(y)$ as before \\
+			\> \> \> $\xrightarrow{\mathmakebox[1.5cm]{(c_0, \dots, c_n)}}$ \\
+			\> \> \> \> $r \xleftarrow{R} GF(q)$ \\
+			\> \> \> \> \textbf{For} $i = 0$ to $m$: \\
+			\> \> \> \> \> // Let $c_{y_i}$ be encryption of $r \cdot P(y_i) + y_i$ as before \\
+			$C_y = \bigcup c_{y_i}$ \> \> \> $\xleftarrow{\mathmakebox[1.5cm]{(c_{y_1}, \ldots, c_{y_m}})}$ \\
+			$Z = \{\}$ \\
+			\textbf{For} $c_y \in C_y$: \\
+			\> $m := \operatorname{AM-Dec}(sk, c_{y})$ \\
+			\> \textbf{If} $m \in X$: \\
+			\> \> $Z = Z \cup \{x\}$ \\
+			\textbf{Return} $Z$
+	\end{numbertabbing}
+  }
+  \caption{Private set intersection from additively homomorphic encryption}
+  \label{alg:set_intersection}
+\end{algo}
+
+\subsubsection{Correctness}
+
+Correctness of this private set intersection algorithm follows directly from
+correctness of the set membership algorithm discussed earlier. Specifically:
+
+\begin{align*}
+		y \in X \cap Y & \Leftrightarrow P(y) = 0 \\
+				& \Leftrightarrow r \cdot P(y) + y = y \\
+				& \Leftrightarrow \operatorname{AM-Dec}(sk, c_y) = y \\
+				& \Rightarrow y \in X
+\end{align*}
+
+Again the caveat about the potential for false positives applies.
+
+\subsubsection{Security for A}
+
+Security for $A$ is equal to security in the set membership algorithm, as the
+exact same information is sent to $B$.
+
+\subsubsection{Security for B}
+
+Security for $B$ follows from security in the set membership algorithm, applied
+to each $c_{y_i}$ it sends.
+
 \section{Secure two-party AND using oblivious transfer}
 
 Note first that for $x = 1$ the binary and $z = x \land y$ clearly identifies
@@ -214,5 +356,7 @@ private input $x$ is leaked.
 Similarly let $x = 0$. By the security property of $\binom{2}{1}$ OT, $A$ will
 learn nothing about $y$, and as such has only access to $x_y = 0$.  However as
 $x_0 = x_1 = 0$ no information about the private input $y$ is leaked.
+
+\printbibliography
 
 \end{document}
