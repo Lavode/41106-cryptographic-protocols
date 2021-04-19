@@ -205,11 +205,11 @@ The following protocol allows $A$ to learn whether $P(y) = 0 \Leftrightarrow y
 			\textbf{For} $i = 0$ to $n$: \\
 			\> $c_i := \operatorname{AM-Enc}(pk, a_i)$ \> \> $\xrightarrow{\mathmakebox[1.5cm]{(c_0, \dots, c_n)}}$ \> $r \xleftarrow{R} GF(q)$ \\
 			\> \> \> \> \textbf{For} $i = 0$ to $n$: \\
-			\> \> \> \> \> $c'_i := (c_i)^{y^n}$ \\
+			\> \> \> \> \> $c'_i := (c_i)^{y^i}$ \\
 			\> \> \> \> $c := \prod c'_i$ // $P(y)$ \\
 			\> \> \> \> $c_{\text{blind}} := c^r$ // $r \cdot P(y)$ \\
 			$m := \operatorname{AM-Dec}(sk, c_y)$ \> \> \> $\xleftarrow{\mathmakebox[1.5cm]{c_y}}$ \> $c_y := c_{\text{blind}} \cdot \operatorname{AM-Enc}(pk, y)$ // $r \cdot P(y) + y$ \\
-			\textbf{Return} $m == y$
+			\textbf{Return} $m \in X$
 	\end{numbertabbing}
   }
   \caption{Private set membership from additively homomorphic encryption}
@@ -225,27 +225,26 @@ encryption of $r \cdot P(y)$ and $c_y$ of $r \cdot P(y) + y$.
 As established, $y \in X \Leftrightarrow P(y) = 0$. As $r \neq 0$ and $q$
 prime, $P(y) = 0 \Leftrightarrow r \cdot P(y) + y = y$.
 
-If $y \not \in X$ then $r \cdot P(y)$ is going to be a random value in
-$GF(q)$, which might not be decipherable by $\operatorname{AM-Dec}$.
-Being able to decipher it is not required however, as it is sufficient to
-establish that it is not a valid encryption of $y$ to conclude that $y \not \in
-X$.
+If $y \not \in X$ then $r \cdot P(y)$ is going to be a random value in $GF(q)$,
+which might not be decipherable by $\operatorname{AM-Dec}$.  Being able to
+decipher it is not required however, as it is sufficient to establish that it
+is not a valid encryption of any $x \in X$ to conclude that $y \not \in X$.
 
 Note that due to the blinding factor $r$ this is only a probabilistic
-assertion. Specifically it is possible that there exists $x \in X$, $y in Y$,
+assertion. Specifically it is possible that there exists $x \in X$, $y \in Y$,
 $x \neq y$, $r \in GF(q)$ such that $r \cdot P(y) + y \equiv x \pmod{q}$.
 
 The chance of such a false positive happening are $\frac{k}{q}$, with $k$ the
 size of the message space, $q$ the size of the finite field. With a properly
-sized finite field this will as such be negligible.
+sized finite field this will be negligible.
 
 \subsubsection{Security for A}
 
 As $B$ only learns of encryptions of the polynomial's coefficents, $B$ learns
-nothing about the secret input $X$ of $A$. As $B$ further calculates $c_y$
-using an additively homomorphic cryptosystem it does also not learn whether $y
-\in X$, as it cannot distinguish an encryption of $y$ from an encryption of a
-random value $k \in GF(q)$.
+nothing about the secret input $X$ of $A$ due to the security of the ElGamal
+cryptosystem. As $B$ further calculates $c_y$ using an additively homomorphic
+cryptosystem it does also not learn whether $y \in X$, as it cannot distinguish
+an encryption of $y$ from an encryption of a random value $k \in GF(q)$.
 
 \subsubsection{Security for B}
 
@@ -279,7 +278,7 @@ checks which of the received ciphertexts are valid encryptions of elements $x
 			\textbf{For} $c_y \in C_y$: \\
 			\> $m := \operatorname{AM-Dec}(sk, c_{y})$ \\
 			\> \textbf{If} $m \in X$: \\
-			\> \> $Z = Z \cup \{x\}$ \\
+			\> \> $Z = Z \cup \{m\}$ \\
 			\textbf{Return} $Z$
 	\end{numbertabbing}
   }
@@ -293,10 +292,9 @@ Correctness of this private set intersection algorithm follows directly from
 correctness of the set membership algorithm discussed earlier. Specifically:
 
 \begin{align*}
-		y \in X \cap Y & \Leftrightarrow P(y) = 0 \\
+		\forall\ y \in Y: y \in X \cap Y & \Leftrightarrow P(y) = 0 \\
 				& \Leftrightarrow r \cdot P(y) + y = y \\
-				& \Leftrightarrow \operatorname{AM-Dec}(sk, c_y) = y \\
-				& \Rightarrow y \in X
+				& \Leftrightarrow \operatorname{AM-Dec}(sk, c_y) = y \in X
 \end{align*}
 
 Again the caveat about the potential for false positives applies.
@@ -313,7 +311,7 @@ to each $c_{y_i}$ it sends.
 
 \section{Secure two-party AND using oblivious transfer}
 
-Note first that for $x = 1$ the binary and $z = x \land y$ clearly identifies
+Note first that for $x = 1$ the binary AND $z = x \land y$ clearly implies
 $y = z$. Similarly $y = 1 \Rightarrow x = z$. As such an adversary submitting
 $k = 1$ will always learn the secret value of the other party due to the nature
 of the binary operation, and security is only relevant for $k = 0$.
@@ -354,8 +352,8 @@ private input $x$ is leaked.
 \subsection{Security for B}
 
 Similarly let $x = 0$. By the security property of $\binom{2}{1}$ OT, $A$ will
-learn nothing about $y$, and as such has only access to $x_y = 0$.  However as
-$x_0 = x_1 = 0$ no information about the private input $y$ is leaked.
+learn nothing about $y$ and knows only $x_0 = x_1 = 0$. Hence no information
+about the private input $y$ is leaked.
 
 \printbibliography
 
