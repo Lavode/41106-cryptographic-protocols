@@ -198,8 +198,10 @@ Define now all $j_{i, x}$ recursively as:
 		j_{i, x'l} & = j_{i - 1, x'} \oplus l_i && \text{For left children} \\
 		j_{i, x'r} & = j_{i - 1, x'} \oplus r_i && \text{For right children}
 \end{align*}
+Where $x' \in \{\text{l}, \text{r}\}^{i-1}$ is the sequence of edges up to the
+last one to reach $j_{i, x}$.
 
-Let $k_0, \ldots, k_{n-1}$ be the leaf nodes of the tree. Such a tree is
+Let now $k_0, \ldots, k_{n-1}$ be the leaf nodes of the tree. Such a tree is
 visualized in figure \ref{fig:keygen}.
 
 \begin{figure}[h]
@@ -255,9 +257,9 @@ Consider now the following protocol for a $\binom{n}{1}$-OT, where $n = 2^k$.
 \subsubsection{Completness}
 
 As noted earlier, each $k_i$ is found by following the edges (left edges being
-$0$, right edges being $1$) of the binary representation of $i$. As such $R$
-will construct $k_y$ the same way $S$ did, and $c_y \oplus k_y = x_y \oplus k_y
-\oplus k_y = x_y$.
+$0$, right edges being $1$) corresponding to the binary representation of $i$.
+As such $R$ will construct $k_y$ the same way $S$ did, and $c_y \oplus k_y =
+x_y \oplus k_y \oplus k_y = x_y$.
 
 \subsubsection{Security for S}
 
