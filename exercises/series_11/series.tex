@@ -1,0 +1,186 @@
+\documentclass[a4paper]{scrreprt}
+
+% Uncomment to optimize for double-sided printing.
+% \KOMAoptions{twoside}
+
+% Set binding correction manually, if known.
+% \KOMAoptions{BCOR=2cm}
+
+% Localization options
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+% Quotations
+\usepackage{dirtytalk}
+
+% Floats
+\usepackage{float}
+
+\usepackage{numbertabbing}
+
+% Enhanced verbatim sections. We're mainly interested in
+% \verbatiminput though.
+\usepackage{verbatim}
+
+% Automatically remove leading whitespace in lstlisting
+\usepackage{lstautogobble}
+
+% PDF-compatible landscape mode.
+% Makes PDF viewers show the page rotated by 90°.
+\usepackage{pdflscape}
+
+% Advanced tables
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+
+% Fancy tablerules
+\usepackage{booktabs}
+
+% Graphics
+\usepackage{graphicx}
+
+% Current time
+\usepackage[useregional=numeric]{datetime2}
+
+% Float barriers.
+% Automatically add a FloatBarrier to each \section
+\usepackage[section]{placeins}
+
+% Custom header and footer
+\usepackage{fancyhdr}
+
+\usepackage{geometry}
+\usepackage{layout}
+
+% Math tools
+\usepackage{mathtools}
+% Math symbols
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{amsthm}
+% General symbols
+\usepackage{stmaryrd}
+
+% Utilities for quotations
+\usepackage{csquotes}
+
+% Bibliography
+\usepackage[
+  style=alphabetic,
+  backend=biber, % Default backend, just listed for completness
+  sorting=ynt % Sort by year, name, title
+]{biblatex}
+\addbibresource{references.bib}
+
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+% Bullet point
+\newcommand{\tabitem}{~~\llap{\textbullet}~~}
+
+\floatstyle{ruled}
+\newfloat{algo}{htbp}{algo}
+\floatname{algo}{Algorithm}
+% For use in algorithms
+\newcommand{\str}[1]{\textsc{#1}}
+\newcommand{\var}[1]{\textit{#1}}
+\newcommand{\op}[1]{\textsl{#1}}
+
+\pagestyle{plain}
+% \fancyhf{}
+% \lhead{}
+% \lfoot{}
+% \rfoot{}
+% 
+% Source code & highlighting
+\usepackage{listings}
+
+% SI units
+\usepackage[binary-units=true]{siunitx}
+\DeclareSIUnit\cycles{cycles}
+
+% Convenience commands
+\newcommand{\mailsubject}{41106 - Cryptography Protocols - Series 11}
+\newcommand{\maillink}[1]{\href{mailto:#1?subject=\mailsubject}
+                               {#1}}
+
+% Should use this command wherever the print date is mentioned.
+\newcommand{\printdate}{\today}
+
+\subject{41106 - Cryptographic Protocols}
+\title{Series 11}
+
+\author{Michael Senn \maillink{michael.senn@students.unibe.ch} - 16-126-880}
+
+\date{\printdate}
+
+% Needs to be the last command in the preamble, for one reason or
+% another. 
+\usepackage{hyperref}
+
+\begin{document}
+\maketitle
+
+
+\setcounter{chapter}{10}
+
+\chapter{Series 11}
+
+\section{Arithmetic circuits}
+
+Let $GF(q)$ be a finite field of prime order $q$, with $q > 2$. Associate
+`True' with $1 \in GF(q)$ and `False' with $0 \in GF(q)$. Then, a binary
+circuit $C_b$ can be transformed to an equivalent arithmetic circuit $C_a$ by
+replacing any of its four gates --- $\operatorname{AND}(x, y)$,
+$\operatorname{OR}(x, y)$, $\operatorname{XOR}(x, y)$, $\operatorname{NOT}(x)$
+--- with the arithmetic operations defined below.
+
+\subsection{Logical `AND'}
+
+Let $\operatorname{AND}(x, y) := x \cdot y \pmod{2}$. Then
+$\operatorname{AND}(x, y) = 1 \Leftrightarrow x = y = 1$.
+
+\subsection{Logical `NOT'}
+
+Let $\operatorname{NOT}(x) := (x + 1) \pmod{2}$. Then $\operatorname{NOT}(0) =
+1$ and $\operatorname{NOT}(1) = 0$.
+
+\subsection{Logical `XOR'}
+
+Let $\operatorname{XOR}(x, y) := (x + y) \pmod{2}$. Then $\operatorname{XOR}(0,
+0) = \operatorname{XOR}(1, 1) = 0$ and $\operatorname{XOR}(0, 1) =
+\operatorname{XOR}(1, 0) = 1$.
+
+\subsection{Logical `OR'}
+
+Note that $x \lor y = \neg(\neg x \land \neg y)$. Hence $\operatorname{OR}(x,
+y) := (x + 1 \pmod{2}) \cdot (y + 1 \pmod{2}) + 1 \pmod{2}$. Then
+$\operatorname{OR}(0, 0) = 0$, and $\operatorname{OR}(0, 1) =
+\operatorname{OR}(1, 0) = \operatorname{OR}(1, 1) = 1$.
+
+\section{Multiplication gate with preprocessing}
+
+Let $GF(q)$ be a finite field of prime order, with $x, y, z, w_j, w_k, m_j,
+m_k, w_t$ as per the exercise. Then:
+
+\begin{align*}
+		m_j m_k + m_j y + m_k x + z & = (w_j - x) \cdot (w_k - y) + (w_j - x) \cdot y + (w_k - y) \cdot x + xy \\
+									& = w_j w_k - w_j y - w_k x + xy + w_j y - xy + w_k x - xy + xy \\
+									& = w_j w_k
+\end{align*}
+
+Hence $m_j m_k + m_j y + m_k x + z = w_j w_k$ as required. As such the product
+$w_t = w_j w_k$ can be calculated from $m_j, m_k, y, x, z$. Consider now how
+each of the summands can be calculated.
+
+By their construction, $[w_j - x], [w_k - y]$ can be calculated locally. This
+then allows reconstructing $m_j, m_k$ as mentioned in the exercise, from which
+$m_j \cdot m_k$ can be calculated locally. Similarly as $x$ and $y$ are known
+to each party, $m_j \cdot y$ and $m_k \cdot x$ can be calculated locally as
+well. Lastly $z$ is known to all parties as $z = x + y$.
+
+Now that all summands are known, the addition can be done locally as well. This
+then yields, as described earlier, the multiplication $w_t = w_j \cdot w_k$.
+
+\end{document}
