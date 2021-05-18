@@ -174,13 +174,29 @@ Hence $m_j m_k + m_j y + m_k x + z = w_j w_k$ as required. As such the product
 $w_t = w_j w_k$ can be calculated from $m_j, m_k, y, x, z$. Consider now how
 each of the summands can be calculated.
 
-By their construction, $[w_j - x], [w_k - y]$ can be calculated locally. This
-then allows reconstructing $m_j, m_k$ as mentioned in the exercise, from which
-$m_j \cdot m_k$ can be calculated locally. Similarly as $x$ and $y$ are known
-to each party, $m_j \cdot y$ and $m_k \cdot x$ can be calculated locally as
-well. Lastly $z$ is known to all parties as $z = x + y$.
+\begin{description}
+		\item $\left[w_j - x, w_k - y\right]$ can be calculated locally as
+				parties possess sharings of $w_j$, $x$, $w_k$ and $y$, and
+				subtraction is a local operation.
+		\item $m_j = w_j - x$ and $m_k = w_k - y$ can the be reconstructed as
+				described in the exercise, using the protocol for output wires.
+		\item $m_j \cdot m_k$ can the be calculated as a local multiplication
+				of two reconstructed values.
+		\item $[m_j \cdot y]$ and $[m_k \cdot x]$ can then similarly be
+				calculated locally using the multiplication with a constant as
+				discussed in the lecture, since the parties posess sharings
+				$[x]$ of $x$ and $[y]$ of $y$.
+		\item $[z]$ is known to the parties as they agreed on this during the
+				preprocessing step.
+\end{description}
 
-Now that all summands are known, the addition can be done locally as well. This
-then yields, as described earlier, the multiplication $w_t = w_j \cdot w_k$.
+As such, each party can calculated $m_j \cdot m_k + [m_j \cdot y] + [m_k \cdot
+x] + [z]$ locally. The value of this sum, consisting of values known to all
+parties and values for which the parties possess a sharing, can  then be
+reconstructed using the regular output-reconstruction scheme.
+
+As such, assuming that the parties possess pre-shared sharings of $[x]$, $[y]$
+$[z] = x \cdot y$, multiplication can be optimized to consist solely of local
+operations and a reconstruction at the end.
 
 \end{document}
