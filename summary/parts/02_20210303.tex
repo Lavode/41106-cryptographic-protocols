@@ -1,0 +1,64 @@
+\section{Basic techniques}
+
+\subsection{Programs as circuits}
+
+Idea: Every program on inputs $x_1, \ldots x_n$ computes function $f(x_1,
+\ldots x_n)$ which can be represented by a turing machine or a circuit.
+
+\subsubsection{Cook-Levin theorem}
+
+Every problem decideable by a non-deterministic turing machine in polynomial
+tmie can be formulated as the SAT of a polynomial-size circuit.
+
+\subsection{Public-key cryptography}
+
+\subsubsection{Discrete logarithms}
+
+Given $G = <g>$, the discrete log of $y \in G$ is $i$ such that $g^i = y$.
+
+\paragraph{DLP}
+
+Given $y = g^x$ for $x \in \mathbb{Z}_q$, find $x$.
+
+\paragraph{CDH}
+
+Given $x = g^a, y = g^b$ for $a, b \in \mathbb{Z}_q$, compute $g^{a \cdot b}$.
+
+\paragraph{DDH}
+
+Given $x = g^a, y = g^b, z = g^c$, where $c$ is either $ab$ or a random value
+in $\mathbb{Z}_q$, differentiate the two cases.
+
+\subsubsection{Public-key encryption formalization}
+
+\begin{description}
+		\item[Completness] $Dec(sk, Enc(pk, m)) = m \forall m$
+		\item[Security] An encryption of any $m$ is indistinguishable from a random
+				element of the ciphertext space. For two messages $m_1, m_2$ no
+				adversary can distinguish $Enc(pk, m_1)$ from $Enc(pk, m_2)$.
+\end{description}
+
+\subsubsection{RSA Correctness}
+
+Uses Fermat's little theorem, given $p$ prime, $a$ integer, $a, p$ coprime:
+\begin{align*}
+		a^{p-1} \equiv 1 \mod p
+\end{align*}
+
+And statement from CRT:
+\begin{align*}
+		a \equiv b \mod pq \Leftrightarrow a \equiv b \mod p \land a \equiv b \mod q
+\end{align*}
+
+Further:
+\begin{align*}
+		\phi(N) = (p - 1)(q - 1) \Rightarrow (p - 1) | \phi(N) \land (q - 1) | \phi(N)
+\end{align*}
+
+Then either $m \equiv 0 \mod p$ in which case $m^{ed} \equiv 0 \mod p$
+directly, or:
+\begin{align*}
+		m^{ed} \equiv m^{ed - 1} \cdot m \equiv m^{(p-1)^h} \cdot m \equiv 1^h \cdot m \equiv m \mod p
+\end{align*}
+
+Equivalently for $\mod q$.

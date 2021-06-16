@@ -1,0 +1,97 @@
+\section{Introduction}
+
+Topics:
+\begin{itemize}
+		\item Computing with encrypted data
+		\item Authenticating without revealing information
+		\item Voting
+		\item ...
+\end{itemize}
+
+\subsection{Example: Generating a random bit among two parties}
+
+\begin{algorithm}
+		\caption{Random coin flip among two parties}
+		\begin{multicols}{3}
+				\begin{algorithmic}[0]
+						\State \textbf{A}
+						\State $a \rgets \setbin$
+						\State $x \rgets \setbin^k$
+						\State $c \coloneqq H(a || x)$
+						\State
+						\State \textbf{Verify} $d = H(b || y)$
+						\State \textbf{Return} $a \oplus b$
+				\end{algorithmic}
+
+				\columnbreak
+
+				\begin{algorithmic}[0]
+						\State 
+						\State 
+						\State 
+						\State $\xleftrightarrow{c, d}$
+						\State $\xrightarrow{a, x}$
+						\State $\xleftarrow{b, y}$
+				\end{algorithmic}
+
+				\columnbreak
+
+				\begin{algorithmic}[0]
+						\State \textbf{B}
+						\State $b \rgets \setbin$
+						\State $y \rgets \setbin^k$
+						\State $d \coloneqq H(b || y)$
+						\State \textbf{Verify} $c = H(a || x)$
+						\State
+						\State \textbf{Return} $a \oplus b$
+				\end{algorithmic}
+		\end{multicols}
+\end{algorithm}
+
+\begin{description}
+		\item[Security] $c$ reveals nothing about $a$, so $B$ cannot bias $b$.
+				As $A$ cannot construct a hash conflict, $A$ can also not
+				change its value. As long as one party is honest, the resulting
+				bit will be uniform.
+\end{description}
+
+\subsection{Example: Voting between parties}
+
+Given parties $p_i$ with votes $v_i$, $i \in \{1, 2, 3\}$, calculate $\sum v_i$
+confidentially. Protocol for $p_i$:
+\begin{itemize}
+		\item $x_{i,1}, x_{i, 2}, x_{i, 3} \coloneqq share(v_i)$, where $share$
+				st $\sum x_{i, j} = v_i \mod p$
+		\item Send $x_{i,j}$ to $p_j$, receive $x_{j, i}$ from $p_j$
+		\item $y_i \coloneqq (x_{1, i} + x_{2, i} x_{3, i} \mod p$
+		\item Send $y_i$ to all $p_j$, receive $y_j$ from $p_j$ where $j \neq i$
+		\item Output $(y_1 + y_2 + y_3) \mod p$
+\end{itemize}
+
+\begin{description}
+		\item[Privacy] Sharing of votes hides details from every party
+		\item[Completness] Follows directly from choice of shares and algebra
+\end{description}
+
+\subsection{Goals}
+
+\begin{description}
+		\item[Privacy] No party larns more information than the output --- as
+				if it was computed by a trusted party $T$.
+		\item[Correctness] Every party receives the correct output. If there is
+				a faulty input, the output is still consistent for all correct
+				parties.
+		\item[Input independence] Inputs of faulty parties must not depend on
+				inputs of correct parties.
+		\item[Fairness] Faulty parties receive output if and only if correct
+				parties receive output.
+\end{description}
+
+\subsection{Fault types}
+
+\begin{description}
+		\item[Semi-honest] Faulty parties execute protocol correctly, but leak
+				all internal values to adversary.
+		\item[Malicious] Faulty parties behave arbitrarily, act against correct
+				parties in a coordinated manner.
+\end{description}

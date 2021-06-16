@@ -5,3 +5,6 @@ exercises/series_4/src/elgamal
 **/r/.Rproj.user
 **/r/.RData
 **/r/.Rhistory
+
+summary/*.pdf
+summary/*.log

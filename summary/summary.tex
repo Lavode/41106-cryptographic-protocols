@@ -1,0 +1,79 @@
+\documentclass[a4paper]{scrartcl}
+
+% Localization
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+% Quotations
+\usepackage{dirtytalk}
+
+% PDF-compatible landscape mode
+\usepackage{pdflscape}
+
+% Advanced tables
+\usepackage{array}
+\usepackage{tabularx}
+
+% Fancy tablerules
+\usepackage{booktabs}
+
+% Graphics
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{graphicx}
+\graphicspath{{resources}}
+
+% Decent quotations
+\usepackage{csquotes}
+
+% Automatic float barriers to each \section
+% \usepackage[section]{placeins}
+
+% Math
+\usepackage{amssymb,amsmath,amsfonts}
+\usepackage{mathtools}
+
+% Algorithms
+\usepackage{algpseudocode}
+% And floats for it
+\usepackage{algorithm}
+
+% Multi column support
+\usepackage{multicol}
+
+% SI units
+\usepackage[binary-units]{siunitx}
+
+% Clickable links in PDF
+\usepackage{hyperref}
+
+\newcommand{\rgets}{\overset{\mathrm{R}}{\gets}}
+\newcommand{\setbin}{\{0, 1\}}
+
+\title{41106 - Cryptographic Protocols}
+\subtitle{Summary}
+\author{Michael Senn}
+\date{\today}
+
+\begin{document}
+
+\maketitle % Inserts the title, author and date
+
+\tableofcontents
+
+\begin{abstract}
+		This summary is based on the lecture notes and slides. It was created
+		for the sole purpose of preparing for an exam, with no focus on
+		proof-reading, a coherent structure or being suitable for other people.
+		Use at your own discretion.
+\end{abstract}
+
+\include{parts/01_20210224}
+
+\include{parts/02_20210303}
+
+\include{parts/03_20210310}
+
+\end{document}
+

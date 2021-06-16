@@ -1,0 +1,130 @@
+\subsection{Digital signatures}
+
+\subsubsection{RSA}
+
+Naive implementation using $Sign(sk, m) = m^d \mod N$ insecure, as adversary
+could pick arbitrary $\sigma*, m := \sigma*^e$, which would pass verification.
+Instead use hashed RSA signatures, `signing' $H(m)$ instead of $m$ directly.
+
+\section{Blind signatures}
+
+Goal: Protocol to allow $A$ to get $B$'s signature on $m$ without $B$ learning
+the message, nor being able to associate a later signature with this action.
+Compare: Signing envelope.
+
+\subsection{Blind signatures for RSA}
+
+Key generation as in RSA.
+
+\begin{algorithm}
+		\caption{Blind RSA signatures}
+		\begin{algorithmic}[0]
+				\Procedure{Sign}{$sk, m$}
+				\State \textbf{A}
+				\State $r \rgets \mathbb{Z}_N$
+				\State $h' \coloneqq H(m) \cdot r^e \mod N$
+				\State $h' \rightarrow B$
+				\State \textbf{B}
+				\State $s' \coloneqq h'^d \mod N$
+				\State $A \leftarrow s'$
+				\State \textbf{A}
+				\State $s \coloneqq s' / r$
+				\EndProcedure
+
+				\Procedure{Verify}{$pk, m, s$}
+				\State $s^e == H(m)$
+				\EndProcedure
+		\end{algorithmic}
+\end{algorithm}
+
+\subsection{Schnorr signatures (non-blind)}
+
+Defined over $q$-order subgroup $G$ of $\mathbb{Z}^*_p$, with $p = m \cdot q +
+1$.
+
+\begin{algorithm}
+		\caption{Schnorr signatures}
+		\begin{algorithmic}[0]
+				\Procedure{KeyGen}{}
+				\State $x \rgets \mathbb{Z}_q$
+				\State $Y \coloneqq g^x$
+				\State \textbf{Return} $(Y, x)$
+				\EndProcedure
+
+				\Procedure{Sign}{$x, m$}
+				\State $r \rgets \mathbb{Z}_q$
+				\State $R \coloneqq g^r$
+				\State $c \coloneqq H(m || t)$
+				\State $s \coloneqq r - c \cdot x$
+				\State \textbf{Return} $(c, s)$
+				\EndProcedure
+
+				\Procedure{Verify}{$Y, m, (c, s)$}
+				\State \textbf{Return} $c == H(m || g^s \cdot Y^c)$
+				\EndProcedure
+		\end{algorithmic}
+\end{algorithm}
+
+\subsection{Blind schnorr signature scheme}
+
+Key gen and verify same as in original.
+
+\begin{algorithm}
+		\caption{Blind Schnorr signatures}
+		\begin{algorithmic}[0]
+				\Procedure{Sign}{$x, m$}
+				\State \textbf{B}
+				\State $r \rgets \mathbb{Z}_q$
+				\State $R \coloneqq g^r$
+				\State $A \leftarrow R$
+
+				\State \textbf{A}
+				\State $\alpha, \beta \rgets \mathbb{Z}_q$
+				\State $R' \coloneqq R \cdot g^{-\alpha} \cdot y^{-\beta}$
+				\State $c' \coloneqq H(m || R')$
+				\State $c \coloneqq c' + \beta$
+				\State $c \rightarrow B$
+
+				\State \textbf{B}
+				\State $s \coloneqq r - c \cdot x$
+				\State $A \leftarrow s$
+
+				\State \textbf{A}
+				\State $s' \coloneqq s - \alpha$
+				\State \textbf{Return} $(c', s')$
+				\EndProcedure
+		\end{algorithmic}
+\end{algorithm}
+
+\subsection{Anonymous digital cash}
+
+Given user $A$, shop $S$, bank $B$. Bank creates coins and stores balances, $A$
+wants to exchange coins for services at $S$.
+
+Goals:
+\begin{itemize}
+		\item If $A$ withdraws from $B$, then $B$ debits it from balance of $A$
+		\item If $A$ transfers to $S$, then $B$ will credit coin to balance of $S$
+		\item $B$ does not credit a coin to $S$ unless $B$ has issued the coin
+				to some valid user $X$, and $X$ has transferred it to $S$
+		\item If $B$ credits a coin to $Y$, then $B$ cannot link this coin to
+				any withdrawal of a user.
+\end{itemize}
+
+\subsubsection{Protocol}
+
+\begin{itemize}
+		\item When $A$ wants to withdaw $u$ coins, it generates a random
+				identifier $m$, blinds it as $m'$, and gets $B$ to issue a
+				blind signature on $m'$. $B$ lowers $A$'s balance by $u$ and
+				issues it a signature $\sigma'$ on $m'$. $A$ unblinds the
+				signature to $\sigma$ and stores $(u, m, \sigma)$ in its
+				wallet.
+		\item To spend a coin, $A$ sends $(u, m, \sigma)$ to $S$. $S$ deposits
+				it in the bank. If successful, it delivers goods or services to
+				$A$.
+		\item To deposit a coin, the bank verifies that $\sigma)$ is a valid
+				signature for $m$. It also checks that $m$ was not yet in its
+				list of already spent coins, and adds it to said list. If all
+				is well, it increases the balance of $S$.
+\end{itemize}
