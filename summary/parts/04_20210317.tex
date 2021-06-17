@@ -1,0 +1,113 @@
+\section{Homomorphic encryption}
+
+Goal: Compute on encrypted data with no interaction between user and cloud.
+
+\subsection{Single homomorphic encryption}
+
+Encryption scheme supporting operation $\oplus$ such that $Enc(x) \oplus Enc(y)
+= Enc(x + y)$, or operation $\otimes$ such that $Enc(x) \otimes Enc(y) = Enc(x
+\cdot y)$, where $x, y$ from some finite field of prime order.
+
+Examples: Additively homomorphic ElGamal.
+
+\subsection{Multiplicatively homomorphic ElGamal}
+
+Textbook ElGamal is already multiplicatively homomorphic. Let $(R, C) = (g^r, m
+\cdot y^r), (R', C') = (g^{r'}, m \cdot y^{r'})$ be two ciphertexts. Then the
+component-wise multiplication $(\hat{R}, \hat{C}) = (g^{r + r'}, m \cdot m'
+\cdot y^{r + r'})$ is a valid encryption of $m \cdot m'$.
+
+\subsubsection{Additively homomorphic ElGamal}
+
+Using $Enc$ and $Dec$ of textbook ElGamal, let:
+
+\begin{algorithm}
+		\caption{AM-ElGamal}
+		\begin{algorithmic}[0]
+				\Procedure{AM-Enc}{$y, m$}
+						\State \textbf{Return} $\operatorname{Enc}(y, g^m)$
+				\EndProcedure
+
+				\Procedure{AM-Dec}{$x, (R, C)$}
+						\State $h \coloneqq \operatorname{Dec}(x, (R, C))$
+						\For{$i \gets 0, max$}
+								\If{$g^i = h$}
+										\State \textbf{Return} $i$
+								\EndIf
+						\EndFor
+						\State \textbf{Return} error
+				\EndProcedure
+		\end{algorithmic}
+\end{algorithm}
+
+\subsection{Voting protocol using AM ElGamal}
+
+\begin{itemize}
+		\item Parties $P_i$ with votes $v_i$, authority $A$
+		\item $A$ generates keypair, distributes public key
+		\item $A$ computes $c_0 = \operatorname{Enc}(pk, 0)$ and sends to $P_1$
+		\item $P_i$ computes $c_i = c_{i-1} \oplus Enc(y, v_i)$ and sends to
+				$P_{i+1}$ ($P_n$ sends to $A$)
+		\item $A$ decrypts $z = \operatorname{Dec}(x, c_n)$
+		\item $A$ publishes $z = \sum_{i = 1}^n v_i$
+\end{itemize}
+
+Note:
+\begin{itemize}
+		\item Not robust against malicious parties. They can encrypt values
+				other than $0, 1$, refuse to send the ciphertext on (or send
+				malicious values), or $A$ can refuse to decrypt.
+		\item Defenses: ZKP to prove valid vote, public bulletin board for
+				communciation, distributed implementation of $A$ using secret
+				sharing.
+\end{itemize}
+
+\section{Zero-knowledge proofs}
+
+Prove statement is true, or knowledge of information, without giving away any
+more information. Two kinds:
+
+\begin{description}
+		\item[Proof for statement] E.g. given boolean formula, there exists a
+				set of variables such that it evaluates to true. Given two
+				graphs, they are isomorph. Given a graph, there exists a
+				hamiltonian circuit.
+		\item[Proof of knowledge] Given $y$, I know $x$ such that $y = g^x$.
+				Given a binary string $h$, I know $x$ such that $H(x) = h$.
+				Given $n$ I know $p, q$ such that $n = pq$.
+\end{description}
+
+Requirements:
+\begin{description}
+		\item[Completness] If $S$ holds, prover $P$ correct, verifier $V$
+				correct, then $V$ accepts.
+		\item[Soundness] If $S$ false, then honest verifier $V$ will reject
+				with at least a constant non-zero probability.
+		\item[Zero-knowledge] $V$ learns only that $S$ holds, and not more.
+\end{description}
+
+For proof, show that:
+\begin{description}
+		\item[Completness] It holds with $P, V$ honest
+		\item[Soundness] Given $P$ malicious, $V$ will reject with at least
+				constant non-zero probability.
+		\item[Zero knowledge] $V$ can also generate output with same
+				distribution as protocol on its own (if in different order).
+\end{description}
+
+\subsection{Graph isomorphism}
+
+$P$, $V$ given two graphs $G_0 = (V, E_0), G_1 = (V, E_1)$. $P$ knows an
+isomorphism $f$ between the two, i.e. a bijective $f: V \rightarrow V$ such that
+$\forall v, w \in V: (v, w) \in E_0 \Leftrightarrow (f(v), f(w)) \in E_1$.
+
+\subsubsection{Protocol}
+
+\begin{enumerate}
+		\item $P$ chooses random permutation $\Pi$ on $V$, computes $H = (V,
+				F)$ such that $H$ is isomorphic to $G_0$. Sends $H$ to $V$.
+		\item $V$ sends random bit $b$
+		\item $P$ shows isomorphism $\rho = \Pi$ for $b = 0$, $\rho = \pi \circ
+				f^{-1}$ for $b = 1$.
+		\item $V$ checks if $G_b$ is isomorphic to $H$.
+\end{enumerate}

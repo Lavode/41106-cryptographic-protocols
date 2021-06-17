@@ -1,0 +1,103 @@
+\subsection{What can be proven in zero-knowledge}
+
+\begin{itemize}
+		\item Graph isomorphism ($\not \in P$, believed to be between $P$ and
+				$NP$)
+		\item If one NP-complete problem has a ZKP, any NP-complete problem has
+				a ZKP (polynomial time)
+		\item 3-Colourability of a graph $G$ is NP-complete nad has ZKP
+		\item In theorey: Can be used for online authentication. In practice:
+				Not used, as more efficient schemes exist.
+\end{itemize}
+
+\subsection{Zero-knowledge proof of knowledge}
+
+Goal: Prove knowledge of $\alpha, \beta, \ldots$ such that $\Phi(\alpha, \beta,
+\ldots)$ holds. Example: Prove knowledge of $\alpha$ such that $g^\alpha = y$.
+
+Notation: $PK\{(\alpha, \beta, \ldots) : \Phi(\alpha, \beta, \ldots)\}$. E.g.
+$PK\{(\alpha) : y = g^\alpha\}$.
+
+\subsubsection{Formalization}
+
+Three stages:
+\begin{itemize}
+		\item Commitment $t$ from $P$ to $V$
+		\item Challenge $c$ from $V$ to $P$
+		\item Response $s$ from $P$ to $V$
+		\item $V$ verifies response
+\end{itemize}
+
+Properties: Similar to ZKP.
+\begin{description}
+		\item[Completness] If $P$ has input $x$ such that $\Phi(x)$ holds, then
+				$V$ accepts
+		\item[Soundness] Given two accepting transcripts $(t, c, s), (t, c',
+				s'), c \neq c'$ and $\Phi(x)$, there is an efficient knowledge
+				extractor $E$.
+		\item[Zero-knowledge] $V$ can simulate transcripts $(t, c, s)$ on its
+				own with indistinguishable distribution.
+\end{description}
+
+\subsection{ZKPK of discrete log}
+
+\begin{algorithm}
+		\caption{ZKPK of discrete log}
+
+		\begin{multicols}{2}
+				\begin{algorithmic}[0]
+						\State \textbf{A}
+						\State $r \rgets \mathbb{Z}_q$
+						\State $t \coloneqq g^r \rightarrow$
+						\State
+						\State $s \coloneqq r - x \cdot c \rightarrow$
+				\end{algorithmic}
+
+		\columnbreak
+
+				\begin{algorithmic}[0]
+						\State \textbf{B}
+						\State
+						\State
+						\State $\leftarrow c \rgets \mathbb{Z}_q$
+						\State \textbf{Verify} $g^s \cdot y^c = t$
+				\end{algorithmic}
+		\end{multicols}
+\end{algorithm}
+
+\subsection{Commitment schemes}
+
+Set of primitives between receiver $R$ and sender $S$.
+
+Three algorithms:
+\begin{description}
+		\item[$KeyGen() \rightarrow pk$] Probabilistic, outputs public key
+		\item[$Com(pk, x, r) \rightarrow c$] Outputs commitment $c$ as bit
+				string to $x$. Probabilistic, $r$ introduces randomness.
+		\item[$Ver(pk, x, r, c) \rightarrow TRUE / FALSE$] Deterministic,
+				returns whether $r$ and $x$ correctly `open' commitment $c$.
+\end{description}
+
+Properties:
+\begin{description}
+		\item[Completness] For $pk \coloneqq KeyGen(), x \in \{0, 1\}^*, r \in
+				R: Ver(pk, x, r, Com(pk, x, r)) = True$
+		\item[Unconditional binding] Security for $R$ against $S$. No $S'$ can produce $(x,
+				r), (x', r')$ with $x \neq x'$ which both pass verification.
+				\begin{itemize}
+						\item Optionally: Weaker version for only
+								computationally bounded adversaries, which
+								cannot do so except with neglibible
+								probability.
+				\end{itemize}
+		\item[Unconditional hiding] Security for $S$ against $R$. For any two
+				commitments to different values, no $R$ can guess --- given a
+				single commitment --- which value the commitment is for with $p
+				> 1/2$.
+				\begin{itemize}
+						\item Optionally: Weaker version for computationlly
+								bounded aversaries, which can guess with
+								probability at most $p > 1/2 + \sigma$ for a
+								negligible $\sigma$.
+				\end{itemize}
+\end{description}

@@ -54,7 +54,7 @@ Defined over $q$-order subgroup $G$ of $\mathbb{Z}^*_p$, with $p = m \cdot q +
 				\Procedure{Sign}{$x, m$}
 				\State $r \rgets \mathbb{Z}_q$
 				\State $R \coloneqq g^r$
-				\State $c \coloneqq H(m || t)$
+				\State $c \coloneqq H(m || R)$
 				\State $s \coloneqq r - c \cdot x$
 				\State \textbf{Return} $(c, s)$
 				\EndProcedure
