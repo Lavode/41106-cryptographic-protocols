@@ -1,0 +1,97 @@
+\section{Oblivious two-party protocols}
+
+\begin{description}
+		\item[OPRF] Oblivious pseud-random function
+		\item[PSI] Private set intersection
+		\item[OT] Oblivious transfer]
+\end{description}
+
+\subsection{OPRF}
+
+Recall PRF: $F : \{0, 1\}^\lambda \times \{0, 1\}^k \rightarrow \{1,
+0\}^{out}$. $F(k, x)$ should `look random' to any party that does not know $k$.
+In practice, PRF implemented as $F(k, x) \coloneqq HMAC(k, x)$.
+
+Oblivious case: Sender $S$ provides $k$, receiver $R$ provides $x$.
+
+\subsubsection{Properties}
+
+\begin{itemize}
+		\item As regular PRF: $R$ cannot distinguish $L^{OPRF}_{prf-real}$ from
+				$L^{OPRF}_{prf-rand}$.
+		\item Oblivious: For any two $x, x'$, $S$ cannot distinguish which one
+				$R$ used as input to OPRF.
+\end{itemize}
+
+
+\subsubsection{Construction of PRF}
+
+Given $G = <g>, |G| = q$, $H : \{0, 1\}^{in} \rightarrow G$, $I : \{0, 1\}^{*}
+\rightarrow \{0, 1\}^{out}$ two hash functions, we construct a PRF $F:
+\mathbb{Z}_q \times \{0, 1\}^{in} \rightarrow \{0, 1\}^{out}$ as follows:
+
+\[
+		F(k, x) \coloneqq I(H(x)^k)
+\]
+
+This is a PRF assuming hardness of CDH in the R.O.M.
+
+\subsubsection{Oblivious evaluation of PRF $F$}
+
+\begin{algorithm}
+		\caption{Oblivious evaluation of PRF}
+
+		\begin{multicols}{2}
+				\begin{algorithmic}[0]
+						\State \textbf{S}
+						\State
+						\State
+						\State $w \coloneqq r^k \rightarrow$
+				\end{algorithmic}
+
+				\columnbreak
+
+				\begin{algorithmic}[0]
+						\State \textbf{R}
+						\State $r \rgets \mathbb{Z}_q$
+						\State $\leftarrow v \coloneqq H(x)^r$ \Comment{in G}
+						\State
+						\State $y \coloneqq J(w^{r^{-1}})$
+				\end{algorithmic}
+		\end{multicols}
+\end{algorithm}
+
+Security for $S$ holds also with malicious $R$, because it only sees a group
+element. Security for $R$ holds for semi-honest $S$, a malicious $S$ could send
+a $\hat{w} \neq w$. To fix this: E.g. ZKP.
+
+\subsection{PSI}
+
+$A$ holds set $X$, $B$ holds set $Y$. Goal: Calculate $X \cap Y$ in oblivious
+way. Assume sets are represented as bit strings of some finite length.
+
+\subsubsection{Insecure protocol}
+
+\begin{enumerate}
+		\item $A$ calculates $h_x \coloneqq H(x) \forall x \in X$, $B$
+				calculates $h_y \coloneqq H(y) \forall y \in Y$
+		\item $A$ sends $H_A$ the set of all hashes to $B$. $B$ intersects with
+				the set of all hashes $H_B$
+		\item $B$ calculates $Z = X \cap Y$, by checking for which $y \in Y$
+				there is a hash value in $H_A \cup H_B$.
+\end{enumerate}
+
+This is insecure, as $B$ is able to test any element $z$ whether $H(z)$ is
+contained in $H_A$.
+
+\subsubsection{PSI using OPRF}
+
+\begin{enumerate}
+		\item $A$ picks OPRF key $k$
+		\item $A$, $B$ transfer the PRF values of $y \in Y$, $H_B$ ($B$, acting
+				as the recipient, learns them)
+		\item $A$ sends PRF values of $x \in X$, $H_A$ (can compute them locally)
+		\item $B$ computes intersection $Z = H_A \cap H_B$
+		\item $B$ sends those $y \in Y$ for which there is an entry in $Z$
+\end{enumerate}
+
