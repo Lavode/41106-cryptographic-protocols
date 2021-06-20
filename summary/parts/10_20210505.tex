@@ -1,0 +1,76 @@
+\subsection{Threshold ElGamal}
+
+Idea: Encrypt such that any $f+1$ clients together can decrypt the ciphertext.
+For key generation, have trusted party distribute shares of private key $x
+\leftrightarrow (x_1, \ldots, x_n$) using $f+1$-out-of-$n$ secret sharing.
+
+For encryption, regular hashed ElGamal, $R \coloneqq g^r, C \coloneqq H(y^r)
+\oplus m$.
+
+For decryption:
+\begin{itemize}
+		\item Client sends $(R, C)$ to all parties $P_1, \ldots, P_n$
+		\item Party $P_i$ computes $d_i \coloneqq R^{x_i}$ and sends to client
+		\item Having received $f+1$ decryption shares, the client computes $z
+				\coloneqq \prod d_i^{\lambda^s_{0,i}}$. Now $z = y^r$, so it
+				computes $\hat{m} \coloneqq H(z) \oplus C$ and $\hat{m} = m$
+\end{itemize}
+
+Secure against passive attacks due to properties of secret sharing scheme. Not
+robust against malicious parties, as they can release incorrect decryption
+shares.
+
+\subsubsection{Robustness against malicious parties}
+
+Dealer generates $y = g^x$ and $y_i = g^{x_i}$ for every party $P_i$. $y_i$ is
+publicly released. Then, every party $P_i$ has to additionally prove --- using
+a ZKPK --- that it knows the $x_i$ such that $y_i = g^{x_i} \land d_i =
+R^{x_i}$.
+
+\subsection{RSA threshold signatures}
+
+Recall: RSA does have a group homomorphism, but we cannot use it as $\varphi(N)$
+must not be public. Instead, use $n$-of-$n$ secret sharing over the integers.
+
+\subsubsection{Key generation}
+
+To share secret key $d$, choose random $d_i \rgets [0, N \cdot 2^\lambda]$ such
+that $\sum d_i \equiv d \pmod{\varphi(N)}$, with $\lambda = 128$.
+
+
+\subsubsection{Distributed signature generation}
+
+\begin{itemize}
+		\item Every party computes and sends a signature share $\sigma_i
+				\coloneqq H(m)^{d_i} \mod N$ to client.
+		\item Upon having received $n$ shares, client computes $\sigma
+				\coloneqq \prod \sigma_i \mod N$
+\end{itemize}
+
+
+\subsubsection{Impracticality}
+
+Issues:
+\begin{itemize}
+		\item Only supports $n$-out-of-$n$ secret sharing
+		\item Other schemes exist for $f+1$-out-of-$n$ RSA signatures
+\end{itemize}
+
+\subsection{Proactive security}
+
+Issue: Over long time, shares are bound to be compromised. Once more than $f$
+shares exposed, security is lost.
+
+Idea: Work in epoch. Once per epoch, reshare the secret. Then, as long as fewer
+than $f$ shares are lost per epoch, security holds.
+
+\begin{itemize}
+		\item Let $x$ be secret, $a(x) = (x_1, \ldots x_n)$ the current shraing
+		\item Let $a'(x) = (x'_1, \ldots, x'_n)$ be a new sharing, that is
+				$a(0) = a'(0)$. How to generate $a'$ in distributed way?
+
+		\item Each $P_i$ generates a random sharing $b_i(x)$ of $0$, and sends
+				the share $b_i(j)$ to every party $P_j$
+		\item Then each $P_i$ calculates $x'_i \coloneqq \sum b_j(i) + x_i$
+		\item Now, $x'_i$ will be a share for $a'(x)$.
+\end{itemize}

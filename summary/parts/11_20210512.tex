@@ -1,0 +1,104 @@
+\section{Secure multiparty computation (MPC)}
+
+So far we used boolean circuits. Now: Arithmetic circuits over a finite field
+$GF(q)$ with $+$ and $\cdot$ operations.
+
+\subsection{Theorem}
+
+For every function $f : \{0, 1\}^* \rightarrow \{0, 1\}$ computed by a boolean
+circuit $C_B$, there exists an arithmetic circuit $C_A$ which also computes
+$f$. The size of $C_A$ is proportional to the one of $C_B$.
+
+\subsection{BGW protocol: MPC with unconditional security}
+
+Recall GMW protocol for 2PC with unconditional security. Overview of MPC:
+\begin{itemize}
+  \item Use $f+1$-of-$n$ secret sharing for all wires: $w \leftrightarrow (w_1,
+    \ldots, w_n) = [w]$
+  \item Implement each gate of circuit
+  \item To provide inputs, $P_i$ shares its input $x_i \leftrightarrow
+    (x_{i,1}, \ldots, x_{i, n})$
+  \item To obtain output, each party releases its share of output
+  \item Communication assumes secure channels between all parties, and a
+    broadcast channel
+  \item Semi-honest model with up to $f$ honest-but-curious
+\end{itemize}
+
+\subsubsection{Share input values}
+
+\begin{itemize}
+  \item $P_i$ shares $x_i \leftrightarrow (x_{i,1}, \ldots, x_{i, n})$
+  \item For each wire $w_i$, parties hold $[w_i]$
+\end{itemize}
+
+Notation: $[w_i] = [w_{i, 1}, \ldots, w_{i, n}$, with $w_{i, j} = a_i(j)$.
+($j$'s share of wire $i$).
+
+\subsubsection{Evaluate gates}
+
+Using a topological order
+
+\paragraph{Addition gate}
+
+Goal: $[w_t] = [w_j] + [w_k]$
+
+\begin{align*}
+  [w_t] & = [w_j] + [w_k] \\
+        & = (a_j(1), \ldots, a_j(n)) + (a_k(1), \ldots, a_k(n)) \\
+        & = (a_j(1) + a_k(1), \ldots, a_j(n) + a_k(n)) \\
+        & = [w_j + w_k]
+\end{align*}
+
+Fully local operations, then each party has its share of $[w_j + w_k]$.
+
+\paragraph{Multiplication-by-constant gate}
+
+Goal: $[w_t] = \gamma \cdot [w_j]$.
+
+\begin{align*}
+  [w_t] & = \gamma \cdot [w_j] \\
+        & = \gamma \cdot (w_{j, 1}, \ldots, w_{j, n}) \\
+        & = (\gamma \cdot w_{j, 1}, \ldots, \gamma \cdot w_{j, n}) \\
+        & = [\gamma \cdot w_j]
+\end{align*}
+
+Again fully local operations.
+
+\paragraph{Multiplication gate}
+
+Goal: $[w_t] = [w_j \cdot w_k]$.
+
+$P_i$ first locally computes $h_{t,i} = w_{j, i} \cdot w_{k, i}$. Notice now
+that $h_{t,1}, \ldots, h_{t, n}$ define a polynomial $b_t(x)$ such that $b_t(i)
+= h_{t, i} = w_{j, i} \cdot w_{k, i} = a_j(i) \cdot a_k(i)$ has degree $2f$.
+
+Observe that $b_t(0) = a_j(0) \cdot a_k(0) = w_j \cdot w_k = w_t$. That is it
+is a valid sharing of the output wire, but with too high a degree. Issue:
+Chained multiplication gates would cause degree to escalate.
+
+There exist lagrange coefficients such that $w_t = b_t(0) = \sum_{i=1}^{2f + 1}
+\lambda_i \cdot b_t(i)$.
+
+This is evaluated using another `shared' computation:
+\begin{itemize}
+  \item $P_i$ shares $h_{t, i} \leftrightarrow (h_{t, i, 1}, \ldots, h_{t, i, n})$
+  \item Parties now hold $[h_{t, 1}], \ldots, [h_{t, n}]$
+  \item Parties locally compute $[w_t] = \sum_{i=1}^{2f+1} \lambda_i \cdot [h_{t, i}] = [\sum_{i=1}^{2f + 1} \lambda_i \cdot h_{t_i}]$
+  \item This now is a new $f+1$-of-$n$ sharing of $w_t$
+\end{itemize}
+
+\paragraph{Output reconstruction}
+
+\begin{itemize}
+  \item For each output wire $o$, parties hold $[w_0]$.
+  \item $P_i$ broadcasts its share $w_{o, i}$
+  \item $P_i$ receives enough shares to reconstruct $w_o$
+\end{itemize}
+
+\paragraph{Cost}
+
+\begin{description}
+  \item[Public-key operations] $O$ (unconditional)
+  \item[Communication bits] $O(|C| \cdot n^2)$
+  \item[Communication rounds] $O(depth(C))$
+\end{description}

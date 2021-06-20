@@ -146,3 +146,16 @@ can recover it, and no $t$ (or fewer) parties have any information on $s$.
 		\item D gives $s_i = f(i)$ to $P_i$
 		\item From any $t+1$ points, the polynomial, and therefore $s = f(0)$, can be recovered
 \end{itemize}
+
+Note:
+\begin{align*}
+		s & = f(0) \\
+		  & = \sum_{i \in S} \lambda^S_{0, i} \cdot s_i
+\end{align*}
+
+Where:
+\begin{align*}
+		\lambda^S_{0, i} & = \prod_{j \in S, j \neq i} \frac{j}{j-i}
+\end{align*}
+
+Is the simplified (for $x = 0$) lagrange base polynomial.
